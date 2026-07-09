@@ -46,14 +46,18 @@ Header GND (J8 pin 6/9/…) ─► single-point star ground (AGND≡DGND under e
 ## Connection / netlist table
 Pi physical pins are J8 (40-pin header, identical layout to Pi 4). PCM1808 pins are the 14-SSOP numbers.
 
-### Clocks & data (I²S0, RP1 ALT function **a2**; GPCLK0 = **a0**)
-| Signal | Pi GPIO | Pi pin | → to |
-|--------|---------|-------:|------|
-| **MCLK** 12.288 MHz (GPCLK0) | GPIO4 | **7** | PCM1808 **SCKI (pin 6)** *only* (PCM5102A self-clocks) |
-| **BCLK** (I²S0 SCLK) | GPIO18 | **12** | PCM1808 **BCK (pin 8)** + PCM5102A **BCK** |
-| **LRCLK/WS** (I²S0 WS) | GPIO19 | **35** | PCM1808 **LRCK (pin 7)** + PCM5102A **LCK** |
-| **Capture data** (I²S0 SDI) | GPIO20 | **38** | ← PCM1808 **DOUT (pin 9)** |
-| **Playback data** (I²S0 SDO) | GPIO21 | **40** | → PCM5102A **DIN** |
+### Clocks & data (I²S0, RP1 ALT function **a2**)
+**MCLK is no longer a Pi 5 GPIO signal** — see [claim-verification.md](claim-verification.md) ("Update 2026-07-09"): the Pi 5 has no on-chip path to a `pll_audio`-locked clock on any GPIO while I²S0 is running BCLK. MCLK now comes from a separate **Arduino Nano ESP32** board — see [../esp32-mclk/](../esp32-mclk/) — wired directly to the PCM1808, with no Pi 5 GPIO involved. Bench-verified at 12.2880 MHz via the board's own PCNT self-test.
+
+| Signal | Source | → to |
+|--------|--------|------|
+| **MCLK** 12.288 MHz | Nano ESP32 **D2 / GPIO5** | PCM1808 **SCKI (pin 6)** *only* (PCM5102A self-clocks) |
+| **BCLK** (I²S0 SCLK) | Pi GPIO18 (pin **12**) | PCM1808 **BCK (pin 8)** + PCM5102A **BCK** |
+| **LRCLK/WS** (I²S0 WS) | Pi GPIO19 (pin **35**) | PCM1808 **LRCK (pin 7)** + PCM5102A **LCK** |
+| **Capture data** (I²S0 SDI) | Pi GPIO20 (pin **38**) | ← PCM1808 **DOUT (pin 9)** |
+| **Playback data** (I²S0 SDO) | Pi GPIO21 (pin **40**) | → PCM5102A **DIN** |
+
+Nano ESP32 and Pi 5 share a common ground (tie Nano ESP32 GND to the breadboard/Pi ground rail); the Nano ESP32 can be powered independently via its own USB.
 
 ### Power & ground
 | Rail | Pi pin | → to |

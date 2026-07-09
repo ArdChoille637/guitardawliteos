@@ -40,8 +40,8 @@ The [KiCad board](../kicad/) uses **bare** PCM1808 + PCM5102A and includes the D
 ## Build order (with test checkpoints)
 1. **Rails + cobbler.** Wire +5 V / +3.3 V / GND. Double-check polarity before powering.
 2. **DAC playback** (fastest win): GY-PCM5102 VIN←5 V, GND, BCK←GPIO18, LCK←GPIO19, DIN←GPIO21, **SCK→GND**, pads **L/L/H/L**. → run Circle `sample/34-sounddevices`; you should hear a tone. *No sound? Check **XSMT=H** first.*
-3. **MCLK (Spike B):** generate GPCLK0 = 12.288 MHz on **GPIO4** (both MCLK 256 fs and BCLK 64 fs must come off `pll_audio`). **Scope-verify** before wiring the ADC.
-4. **ADC capture:** strap MD0/MD1/FMT→GND; VCC←5 V (+0.1 µF&10 µF), VDD←3.3 V (+0.1 µF&10 µF), VREF→0.1 µF&10 µF to GND; SCKI←GPIO4, BCK←GPIO18, LRCK←GPIO19, DOUT→GPIO20. Temporarily feed VINL a line-level signal → confirm capture with Circle `sample/42-soundinput`.
+3. **MCLK (Spike B) — done:** the **Arduino Nano ESP32** ([esp32-mclk/esp32-mclk.ino](../esp32-mclk/)) generates 12.288 MHz on its own **D2 (GPIO5)** pin, independent of the Pi 5. Flashed and bench-verified via the chip's own PCNT self-test (no scope needed) at 12.2880 MHz, exact match. (The Pi-internal `GPCLK0` route was ruled out — `clk_i2s` is already claimed by BCLK the whole time I²S runs; see [claim-verification.md](claim-verification.md).)
+4. **ADC capture:** strap MD0/MD1/FMT→GND; VCC←5 V (+0.1 µF&10 µF), VDD←3.3 V (+0.1 µF&10 µF), VREF→0.1 µF&10 µF to GND; SCKI←**Nano ESP32 D2**, BCK←GPIO18, LRCK←GPIO19, DOUT→GPIO20. Temporarily feed VINL a line-level signal → confirm capture with Circle `sample/42-soundinput`.
 5. **Front-end:** build VBIAS (R1/R2/C1 → 2.5 V), then the MCP6002 buffer + gain (Rg=10 k, Rf=10 k + RV1), Cin/Rbias, Cout→Rs→Ca→VINL, Cr on VINR, C8 bypass on the op-amp. Jack → Cin. Set RV1 to **×3**; check a hard strum peaks ≈ −1…−3 dBFS on a level meter.
 
 ## Common-mistake checklist
@@ -49,7 +49,7 @@ The [KiCad board](../kicad/) uses **bare** PCM1808 + PCM5102A and includes the D
 - [ ] PCM1808 **MD0/MD1/FMT all to GND** *before power-on* (selects I²S slave).
 - [ ] PCM1808 **VCC = 5 V**, **VDD = 3.3 V** (not both 3.3 V — analog needs 5 V).
 - [ ] **GPIO20 = capture-in** (ADC DOUT), **GPIO21 = playback-out** (DAC DIN) — not swapped.
-- [ ] **MCLK on GPIO4** present (12.288 MHz) before expecting ADC data.
+- [ ] **MCLK from the Nano ESP32** present (12.288 MHz on its D2 pin) before expecting ADC data — this no longer comes from a Pi GPIO.
 - [ ] Guitar goes through the **front-end**, never straight to VINL.
 - [ ] Op-amp on **5 V** (so it can swing to 4.0 V); MCP6002 is RRIO so it's fine.
 - [ ] Single **star ground**; AGND≡DGND on the PCM1808.

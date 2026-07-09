@@ -27,11 +27,11 @@ These two spikes retire the highest-uncertainty items surfaced by verification. 
 
 - [ ] **1.1 `[SPIKE A]` RP1 peripheral access smoke test** (S) — boot Circle's `sample/29-gpio` (or toggle a GPIO/blink) on Pi 5 to confirm RP1 GPIO is live on entry to `main()` with stock `config.txt`. Confirms `[CORR-3]` (Circle's PCIe RC bring-up works) on *our* board/firmware before we depend on it. ✅ Expected to pass — verification shows Circle handles this.
 - [ ] **1.15 `[SPIKE C]` DSI touch display bring-up** (M) — build `sample/28-touchscreen` with `DSI_DISPLAY=0` on the official **Touch Display 2** via Circle's new `addon/rp1dsi` (video + Goodix touch + I²C backlight; **zero 40-pin GPIOs**; present at our pinned commit), then `addon/lvgl/sample` with **90° software rotation** (TD2 is portrait-native). Gates the retro-deck faceplate cutout ([retro-deck-design.md](../docs/retro-deck-design.md) §1). Fallback verified: HDMI + USB HID touch.
-- [ ] **1.2 `[SPIKE B]` 12.288 MHz MCLK generation** (M) `[CORR-4]` **← highest-value spike.** Generate a clean **12.288 MHz** clock on **GPIO4 (GPCLK0, Alt0)** for the PCM1808 SCKI. Mechanism (verified): instantiate a **dedicated `clk_i2s` GPIO clock** and call `StartRate(12288000)` (this selects the `pll_audio` table entry), routed via `clk_i2s → clk_gp0 → GPIO4`. **Note:** GPCLK0/1/2 *cannot* parent `pll_audio` directly, and Circle's I²S sound device does *not* emit MCLK on its own — this is separate clock-gen code. Verify frequency + stability with a scope/logic analyzer (target 12.288 MHz ±, integer-locked to `pll_audio`).
-  - **Acceptance:** measured 12.288 MHz on GPIO4, coherent with the 3.072 MHz BCLK the I²S block will later generate (both off `pll_audio`).
-  - **If it fails:** capture is blocked → fall back options to evaluate: (a) a small external oscillator/clock-gen (e.g. Si5351) for SCKI, accepting async-but-fs-locked operation per `[CORR-4]`/E2; (b) run the PCM1808 at 384fs/512fs if a cleaner divide helps. **Do not proceed to capture (M3) until this is green.**
+- [x] **1.2 `[SPIKE B]` 12.288 MHz MCLK generation** (M) `[CORR-4]` **← highest-value spike — internal route ruled out 2026-07-09, resolved via external generator, frequency confirmed 2026-07-09.** The originally-planned `clk_i2s → clk_gp0 → GPIO4` route doesn't work: `clk_i2s` is a single physical clock generator already claimed exclusively by Circle's I²S peripheral for BCLK (`64fs` = 3.072 MHz @ 48 kHz, the whole time audio runs) — MCLK needs `256fs` = 12.288 MHz, 4× that rate, from the same block, at the same time. No other RP1 clock generator has `pll_audio` as an available parent either. Full writeup: [docs/claim-verification.md](../docs/claim-verification.md).
+  - **Resolution:** generate MCLK **off-chip** on an **Arduino Nano ESP32** (ESP32-S3), wired directly to PCM1808 SCKI, independent of the Pi 5's `pll_audio`. Firmware: [esp32-mclk/](../esp32-mclk/). Note: ESP32-S3 has **no** dedicated Audio PLL (APLL is original-ESP32-only, confirmed against the installed SDK's `soc/clk_tree_defs.h`) — an earlier version of this note wrongly assumed it did. It uses the general-purpose `PLL_160M` source instead, via the ESP-IDF `i2s_std` driver's `mclk_multiple` config.
+  - **Verified:** no scope on hand, so measured with the chip's own PCNT (pulse counter) peripheral instead — a self-test mode in the same firmware loops the MCLK pin (D2/GPIO5) back into a counter pin (D3/GPIO6) via a jumper and prints the measured frequency once a second. Result: **12.2880 MHz**, exact match to target, repeatable across multiple readings (some readings undercounted from a loose self-test jumper, not the generator — readings were exact whenever the jumper made solid contact). This confirms frequency correctness; it does **not** characterize jitter/duty-cycle, which still needs a real scope if that level of verification ever becomes necessary — not expected to matter for a consumer-grade ADC per `[CORR-4]`/E2.
 
-**Gate:** GPIO4 carries a stable, correct, `pll_audio`-locked MCLK.
+**Gate:** ✅ met — the Nano ESP32's output pin carries a correct 12.288 MHz MCLK, confirmed via the firmware's own PCNT self-test (see above). Wire it to the PCM1808 whenever Milestone 2 hardware is on the bench.
 
 ---
 
@@ -40,17 +40,17 @@ These two spikes retire the highest-uncertainty items surfaced by verification. 
 
 **Corrected pin map (`[CORR]` C2 — verified against Circle `i2ssoundbasedevice-rp1.cpp`):**
 
-| Pi GPIO | Circle name | Signal | Direction | Connects to |
+| Source | Circle name | Signal | Direction | Connects to |
 |--------:|-------------|--------|-----------|-------------|
-| 18 | `PCMCLK` | BCLK | Pi → both | PCM1808 BCK, PCM5102A BCK |
-| 19 | `PCMFS`  | LRCLK/FS | Pi → both | PCM1808 LRCK, PCM5102A LCK |
-| 20 | `PCMDIN` | data **IN** (capture) | ADC → Pi | **PCM1808 DOUT** |
-| 21 | `PCMDOUT`| data **OUT** (playback) | Pi → DAC | **PCM5102A DIN** |
-| 4  | `GPCLK0` (Alt0) | MCLK 12.288 MHz | Pi → ADC | **PCM1808 SCKI** only |
+| Pi GPIO18 | `PCMCLK` | BCLK | Pi → both | PCM1808 BCK, PCM5102A BCK |
+| Pi GPIO19 | `PCMFS`  | LRCLK/FS | Pi → both | PCM1808 LRCK, PCM5102A LCK |
+| Pi GPIO20 | `PCMDIN` | data **IN** (capture) | ADC → Pi | **PCM1808 DOUT** |
+| Pi GPIO21 | `PCMDOUT`| data **OUT** (playback) | Pi → DAC | **PCM5102A DIN** |
+| **Nano ESP32 D2/GPIO5** | — (ESP-IDF `i2s_std` MCLK-out) | MCLK 12.288 MHz | ESP32 → ADC | **PCM1808 SCKI** only — *not a Pi GPIO*, see Spike B resolution above |
 
-Pi 5 I²S0 is **master** (clock producer). `[CORR-2]` SD and HDMI are on the BCM2712 and independent of this bus.
+Pi 5 I²S0 is **master** (clock producer) for BCLK/LRCLK/data. `[CORR-2]` SD and HDMI are on the BCM2712 and independent of this bus.
 
-- [ ] **2.1 PCM1808 strapping** (S) `[CORR D1]` — **before power-on**: MD1=GND, MD0=GND (slave, 256/384/512fs autodetect), FMT=GND (I²S, 24-bit). (Internal 50 kΩ pulldowns mean floating=low, but tie explicitly.) SCKI←GPIO4, BCK←GPIO18, LRCK←GPIO19, DOUT→GPIO20.
+- [ ] **2.1 PCM1808 strapping** (S) `[CORR D1]` — **before power-on**: MD1=GND, MD0=GND (slave, 256/384/512fs autodetect), FMT=GND (I²S, 24-bit). (Internal 50 kΩ pulldowns mean floating=low, but tie explicitly.) SCKI←**Nano ESP32 D2**, BCK←Pi GPIO18, LRCK←Pi GPIO19, DOUT→Pi GPIO20.
 - [ ] **2.2 PCM5102A (GY-PCM5102 module) strapping** (S) `[CORR-5]` — solder pads: FLT=L, DEMP=L, **XSMT=H (UNMUTE — the #1 silent-output gotcha)**, **FMT=L (I²S)**. SCK→GND (internal PLL; no MCLK needed). DIN←GPIO21, BCK←GPIO18, LCK←GPIO19. Power per module (3.3 V).
 - [ ] **2.3 Playback smoke test** (S) — run Circle `sample/34-sounddevices` (I²S/PCM5102A) on Pi 5; confirm a test tone out of the PCM5102A. Validates `[CORR-5]` strapping + BCLK/LRCLK.
 - [ ] **2.4 Capture smoke test** (M) — run/adapt Circle `sample/42-soundinput`; confirm the PCM1808 produces non-zero samples (depends on Spike B MCLK). Format is fixed standard-I²S 24-in-32 `[CORR C3]` — no format selection to get wrong.
@@ -108,7 +108,7 @@ Pi 5 I²S0 is **master** (clock producer). `[CORR-2]` SD and HDMI are on the BCM
 
 | Risk | Severity | Status | Mitigation |
 |------|----------|--------|------------|
-| MCLK gen harder than a one-liner `[CORR-4]` | High | **Open — Spike B** | Dedicated `clk_i2s`@12.288 MHz→GPIO4; fallback external Si5351 |
+| Internal GPCLK MCLK route infeasible (`clk_i2s` shared with BCLK) `[CORR-4]` | High | **Mitigated 2026-07-09** | External MCLK: Arduino Nano ESP32 (ESP32-S3 APLL) → PCM1808 SCKI, decoupled from Pi 5 `pll_audio` |
 | PCM5102A XSMT shipped muted `[CORR-5]` | Med | Open | Verify XSMT=H pad at 2.2 |
 | Accidentally adding `pciex4_reset=0` w/ Circle `[CORR-3]` | Low | Mitigated | Stock `config.txt`; documented |
 | Shipping unlicensed YIN/board files `[CORR-6]` | Med (legal) | Mitigated | Clean-room YIN; simplecodec3 = study-only |
@@ -120,3 +120,4 @@ Pi 5 I²S0 is **master** (clock producer). `[CORR-2]` SD and HDMI are on the BCM
 - FatFs R0.16 (`addon/fatfs`) → 1-clause BSD
 - YIN → clean-room from JASA 2002 (patent expired; no repo dependency)
 - Hardware: PCM1808 (slave, strap-only) + PCM5102A/GY-PCM5102 (strap-only) — no driver code
+- Hardware: Arduino Nano ESP32 (ESP32-S3) — external MCLK generator only, no data/BCLK/WS connection to Pi 5

@@ -4,33 +4,36 @@ Bare-metal **Raspberry Pi 5** loop recorder / guitarist workbench. I²S audio (P
 
 > **This is the project front door.** Everything links from here.
 
-## Status — 2026-06-29
+## Status — 2026-07-09
 - ✅ **Research verified.** 29 load-bearing claims checked against primary sources (Circle cloned both branches, TI datasheets, RP1 datasheet, RPi white paper, forums). 6 were wrong; 3 of those change the build. → [docs/claim-verification.md](docs/claim-verification.md)
 - ✅ **Build plan written**, corrections folded in, 2 new de-risking spikes added. → [planning/build-plan.md](planning/build-plan.md)
 - ✅ **Milestone 0 build chain working.** `aarch64-elf-gcc 16.1.0` → Circle (`develop@22722a76`, `RASPPI=5`) → `kernel_2712.img` built & linked. One command: `scripts/build.sh`. → [docs/build-setup.md](docs/build-setup.md)
 - 🔌 **Boot partition staged** in [`sdcard/`](sdcard/) (config + kernel + both Pi 5 DTBs + overlay, all validated). **Your move:** format a microSD FAT32, copy `sdcard/` contents, boot with HDMI → expect Circle log text.
-- ⏭️ **Next after first boot:** **Spike B (12.288 MHz MCLK)** — the one item that gates ADC capture.
+- ✅ **Spike B done.** The planned internal `clk_i2s→GPCLK0` MCLK route doesn't work — `clk_i2s` is already claimed by BCLK the whole time I²S runs. **Resolved with an external generator:** an Arduino Nano ESP32 now generates MCLK, wired straight to the PCM1808. Flashed and bench-verified (no scope needed — the chip's own PCNT peripheral measured it): **12.2880 MHz**, exact match to target. → [docs/claim-verification.md](docs/claim-verification.md), [esp32-mclk/](esp32-mclk/)
+- ⏭️ **Next:** wire the Nano ESP32 to the PCM1808 once Milestone 2 hardware is on the bench, then first Pi 5 boot.
 
-## The 5 things verification changed (read before building)
+## The 6 things verification changed (read before building)
 1. **No `≤128` DMA chunk cap** — it's a constructor arg, default **8192**. Ring-buffer/SD batching gets *easier*. The doc was wrong.
 2. **Pi 5 SD = BCM2712 SDHCI (`CEMMCDevice`, `0x1000FFF000`), not RP1, not `CSDHCIDevice`.** Tested & supported.
 3. **Do NOT add `pciex4_reset=0`** with Circle — Circle brings up the PCIe root complex itself. Stock `config.txt`.
-4. **MCLK is feasible but not free.** 12.288 MHz is achievable from the Audio PLL, but GPCLK can't parent `pll_audio` directly and Circle's I²S device won't emit MCLK — it needs dedicated `clk_i2s`→GPIO4 code. **→ Spike B.**
+4. **MCLK cannot come from the Pi 5's own GPIO while I²S is running.** `clk_i2s` — the only RP1 clock generator with `pll_audio` as a parent — is already claimed for BCLK. **→ external MCLK generator (Nano ESP32), see Spike B above.**
 5. **The two "MIT" libs (simplecodec3, Yin-Pitch-Tracking) are unlicensed** (all-rights-reserved). YIN patent is **expired** → clean-room reimplement from the 2002 paper.
+6. **(2026-07-09)** Even the *revised* internal-MCLK mechanism from correction #4 (`clk_i2s→clk_gp0→GPIO4`) turned out to be a resource conflict, not just missing Circle code — see [claim-verification.md](docs/claim-verification.md).
 
 ## Hardware (Phase 1)
 - Raspberry Pi 5 · microSD (Class-10/UHS-I) · HDMI monitor ≤1080p · USB-serial for the UART debug console.
 - PCM1808 ADC (slave, strap-only) · PCM5102A / GY-PCM5102 DAC (strap-only).
+- **Arduino Nano ESP32** — external MCLK generator (see [esp32-mclk/](esp32-mclk/)), electrically independent of the Pi 5 except for the MCLK line + shared ground.
 
 **Verified pin map** ([details](planning/build-plan.md#milestone-2--hardware-bring-up-i²s-loopback)):
 
-| GPIO | Signal | → |
+| Source | Signal | → |
 |--:|---|---|
-| 18 | BCLK | both codecs |
-| 19 | LRCLK/FS | both codecs |
-| 20 | data IN (capture) | ← PCM1808 DOUT |
-| 21 | data OUT (playback) | → PCM5102A DIN |
-| 4 | MCLK 12.288 MHz | → PCM1808 SCKI only |
+| Pi GPIO18 | BCLK | both codecs |
+| Pi GPIO19 | LRCLK/FS | both codecs |
+| Pi GPIO20 | data IN (capture) | ← PCM1808 DOUT |
+| Pi GPIO21 | data OUT (playback) | → PCM5102A DIN |
+| **Nano ESP32 D2/GPIO5** | MCLK 12.288 MHz | → PCM1808 SCKI only |
 
 ⚠️ **PCM5102A breakout: set the XSMT pad HIGH (unmute)** — ships muted. ⚠️ **PCM1808: strap MD1=MD0=FMT=GND before power-on.**
 

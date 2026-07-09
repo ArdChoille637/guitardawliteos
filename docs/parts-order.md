@@ -10,6 +10,11 @@
 | 1 | SC1158 | 27 W USB-C PD supply (US, black) | 12 | Pi 5 needs the 5 V/5 A mode. (SC1407 is the EU plug — avoid.) |
 | (1) | SC1432 | Raspberry Pi 5, 8 GB | **175** | ⚠️ DRAM-shortage pricing (was $80 MSRP). **If you already have a Pi 5, skip**; if buying spares for the project, decide whether to wait out the memory price surge. |
 
+## 1b. MCLK generator (Spike B, added 2026-07-09)
+| Qty | MPN | Item | ~$ | Note |
+|--:|------|------|---:|------|
+| 1 | **ABX00083** | Arduino Nano ESP32 (ESP32-S3, with headers) | ~19 | **Skip if you already own one.** Generates the 12.288 MHz MCLK for the PCM1808 off-board — the Pi 5's internal `GPCLK0` route was ruled out (`clk_i2s` conflicts with BCLK). See [claim-verification.md](claim-verification.md), [../esp32-mclk/](../esp32-mclk/). Price is a search-derived estimate, not checkout-verified like the rest of this doc — reverify at DigiKey before ordering. |
+
 ## 2. Breadboard infrastructure
 | Qty | MPN | Item | ~$ | Note |
 |--:|------|------|---:|------|
@@ -78,8 +83,9 @@
 ## Rough totals
 - **Core prototype** (§2–§6, no Pi/display): **~$95–110**
 - **+ Debug Probe & Active Cooler** (§1, no Pi): +$29
+- **+ Nano ESP32 MCLK generator** (§1b, skip if you already own one): +$19
 - **+ 7″ Touch Display 2**: +$60
-- Everything incl. a new Pi 5: ~$360 (of which $175 is shortage-priced Pi)
+- Everything incl. a new Pi 5: ~$380 (of which $175 is shortage-priced Pi)
 
 ### Checkout gotchas recap
 1. BB830: pick the **DigiKey-direct** listing (4526-…), not marketplace.

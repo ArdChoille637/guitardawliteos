@@ -42,8 +42,8 @@ U3 (GY-PCM5102) is self-decoupled and carries its own output RC (470 Ω + 2.2 nF
 - `+3V3` — Pi J8 **pin 1**; U2 VDD (pin 4); U3 **XSMT pad → H**.
 - `GND` — Pi J8 **pin 6** (star); U1 V− (pin 4); U2 AGND(2), DGND(5), MD0(10), MD1(11), FMT(12); U3 GND, SCK, FLT/DEMP/FMT pads; J1 sleeve; all decoupling/bias returns. **AGND ≡ DGND**, single star to one Pi GND.
 
-**I²S0 (RP1 ALT a2; clocks from Pi master)**
-- `MCLK` — Pi **p7/GPIO4** (GPCLK0) → U2 **SCKI (6)**. *ADC only.*
+**I²S0 (RP1 ALT a2; BCLK/LRCLK/data from Pi master)**
+- `MCLK` — ⚠️ **no longer from the Pi header.** `GPCLK0`/GPIO4 was ruled out 2026-07-09 (`clk_i2s` is already claimed by BCLK the whole time I²S runs — see [claim-verification.md](claim-verification.md)). MCLK now comes from an **Arduino Nano ESP32** (D2/GPIO5, [esp32-mclk/](../esp32-mclk/), bench-verified at 12.2880 MHz) → U2 **SCKI (6)**. *ADC only. Not SPICE/ERC-reviewed with this source yet — the analog front-end and power/ground nets below are unaffected, but the MCLK net in the KiCad project ([kicad/gen.py](../kicad/gen.py)) still shows the old Pi-header connection and needs updating before fab.*
 - `BCLK` — Pi **p12/GPIO18** → U2 **BCK (8)** + U3 **BCK**.
 - `LRCLK` — Pi **p35/GPIO19** → U2 **LRCK (7)** + U3 **LCK**.
 - `CAPDAT` — U2 **DOUT (9)** → Pi **p38/GPIO20**.
@@ -86,7 +86,7 @@ Re-running with `ngspice -b --define VMARGIN=0.6 docs/sim/frontend.cir` models O
 ## Build / assembly order (breadboard or perfboard)
 1. **Power & ground first.** Bring in +5 V (Pi p2) and +3V3 (Pi p1); set the single star ground. Add FB1 + C2/C3 to U2 VCC.
 2. **DAC playback path** (fastest win): wire U3 (VIN, GND, BCK, LCK, DIN, SCK→GND), set pads **L,L,H,L** (XSMT=H!). Test with Circle `sample/34-sounddevices`.
-3. **MCLK (Spike B)** before the ADC: GPCLK0 on GPIO4 = 12.288 MHz → U2 SCKI. **MCLK (256 fs) and BCLK (64 fs) must both derive from `pll_audio`** (256 fs ÷ 4 = 64 fs) so SCKI and LRCK stay frequency-coherent — verify on a scope.
+3. **MCLK (Spike B) — done:** Nano ESP32 D2/GPIO5 = 12.288 MHz → U2 SCKI. Runs independently of the Pi 5's `pll_audio`/BCLK — the PCM1808 only needs fs-sync, not phase-lock (`[CORR-4]`/E2). Frequency bench-verified at 12.2880 MHz (chip's own PCNT self-test, no scope available); remove the self-test jumper before wiring to U2.
 4. **ADC capture path**: strap U2 (MD0/MD1/FMT→GND), wire SCKI/BCK/LRCK/DOUT, VCC/VDD/VREF + decoupling. Temporarily feed VINL a line signal to confirm capture (Circle `sample/42-soundinput`).
 5. **Front-end last**: build VBIAS (R1/R2/C1), then U1A buffer, U1B gain (Rg, Rf+RV1), Cout/Rs/Ca → VINL; Cr on VINR. Set RV1 to ×3 and check on a level meter (hard strum ≈ −1…−3 dBFS).
 

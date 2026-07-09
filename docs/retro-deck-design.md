@@ -93,7 +93,7 @@ The HAT+ spec (2023-12, current 2024-12) **deprecates the rigid 65×56 rule**: a
 |------|-----------|--------|
 | 0/1 | ID EEPROM (ID_SD/ID_SC) — nothing else | HAT+ rule |
 | 2/3 | I²C1 → broken out (hackability + panel expander option) | free bus |
-| 4 | MCLK (GPCLK0 → PCM1808 SCKI) | fixed |
+| 4 | **free** — MCLK moved off-Pi to an external Nano ESP32 (2026-07-09, see [claim-verification.md](claim-verification.md)); `GPCLK0`/GPIO4 route was ruled out (`clk_i2s` conflicts with BCLK) | reclaimed |
 | 18–21 | I²S0 (BCLK/LRCLK/DIN/DOUT) | fixed |
 | 7–11 | SPI0 → panel bus: APA102 bargraph, optional SPI TFT | reserved |
 | 5, 6, 16, 17 | TRANSPORT: REM optoMOS, IR_TX, SOLENOID_DRV, MOTOR_EN | rev B |
