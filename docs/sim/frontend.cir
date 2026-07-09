@@ -1,0 +1,59 @@
+* GuitarDAWLiteOS guitar front-end verification (single 5V supply)
+* VBIAS=2.5V mid-rail (independent of ADC VREF pin)
+* Stage1: x1 buffer (1Meg to VBIAS). Stage2: non-inverting x3 (Rf=20k, Rg=10k to VBIAS)
+* Output: 1uF -> 1k+1nF AA -> VINL (PCM1808 = 60k to internal 2.5V)
+
+* VMARGIN = op-amp output swing limit from each rail. 0.02 = ideal (canonical run).
+* Re-run with VMARGIN=0.6 to model OPA1662 worst-case (0.6..4.4V): hot-HB 1Vpp still
+* gives feo 0.996..3.997V => no clip, so a real non-RRIO audio op-amp suffices.
+.param VMARGIN=0.02
+.subckt opamp inp inn out vcc vee
+Bamp nint 0 V = max( V(vee)+{VMARGIN}, min( V(vcc)-{VMARGIN}, 1e6*(V(inp)-V(inn)) ) )
+Rout nint out 75
+.ends
+
+Vcc vcc 0 5
+R1 vcc vbias 10k
+R2 vbias 0   10k
+C1 vbias 0   10u
+
+Vin in 0 SIN(0 0.5 1k) AC 1
+Cin in nbi 0.1u
+Rbias nbi vbias 1Meg
+Xbuf nbi bo bo vcc 0 opamp
+
+Rg ninv vbias 10k
+Rf ninv feo  20k
+Xgain bo ninv feo vcc 0 opamp
+
+Cout feo aa 1u
+Rs aa vinl 1k
+Ca vinl 0 1n
+Radc vinl vrefadc 60k
+Vrefadc vrefadc 0 2.5
+
+.control
+  op
+  echo "==== DC OP (expect ~2.5V) ===="
+  print v(vbias) v(bo) v(feo) v(vinl)
+
+  ac dec 100 0.05 2meg
+  echo "==== AC gain (dB) vs freq; input=0dB so vdb(feo)=gain ===="
+  meas ac gain_1k   find vdb(feo) at=1000
+  meas ac gain_100  find vdb(feo) at=100
+  meas ac gain_20k  find vdb(feo) at=20000
+  meas ac flo_3db   when vdb(feo)=6.54 rise=1
+  meas ac fhi_3db   when vdb(feo)=6.54 fall=1
+
+  tran 5u 8m 2m
+  echo "==== TRAN hot-HB 1Vpp in (0.5V amp,1kHz): expect feo 1.0-4.0V, no clip ===="
+  meas tran vmax  MAX v(feo) from=3m to=8m
+  meas tran vmin  MIN v(feo) from=3m to=8m
+
+  alter @Vin[sin] = [ 0 0.8 1k 0 0 ]
+  tran 5u 8m 2m
+  echo "==== TRAN overdrive 1.6Vpp in (0.8V amp): x3=4.8Vpp should CLIP at rails ===="
+  meas tran od_vmax MAX v(feo) from=3m to=8m
+  meas tran od_vmin MIN v(feo) from=3m to=8m
+.endc
+.end

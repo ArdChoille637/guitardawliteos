@@ -1,0 +1,53 @@
+<svg width="100%" viewBox="0 0 680 404" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>GuitarDAWLiteOS breadboard placement</title>
+<desc>Breadboard top-view: Pi cobbler, guitar front-end (MCP6002), PCM1808 ADC, and GY-PCM5102 DAC, with the +5V/GND rails and the I2S0 bus.</desc>
+<defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<style>
+text{font-family:-apple-system,Helvetica,Arial,sans-serif;fill:#2C2C2A}
+.t{font-size:13px;font-weight:500}.ts{font-size:11px;fill:#444441}.acc{font-size:11px;font-weight:500;fill:#993C1D}
+.board{fill:#F1EFE8;stroke:#888780;stroke-width:1}
+.gray{fill:#E7E5DD;stroke:#5F5E5A}.teal{fill:#E1F5EE;stroke:#0F6E56}.coral{fill:#FAECE7;stroke:#993C1D}.purple{fill:#EEEDFE;stroke:#534AB7}
+rect[class]{stroke-width:1}
+</style>
+
+<line x1="40" y1="44" x2="56" y2="44" stroke="#E24B4A" stroke-width="2.5"/><text class="ts" x="60" y="48">+5V</text>
+<line x1="98" y1="44" x2="114" y2="44" stroke="#378ADD" stroke-width="2.5"/><text class="ts" x="118" y="48">GND</text>
+<line x1="160" y1="44" x2="176" y2="44" stroke="#378ADD" stroke-width="2.5"/><text class="ts" x="180" y="48">clock</text>
+<line x1="226" y1="44" x2="242" y2="44" stroke="#D4537E" stroke-width="2.5"/><text class="ts" x="246" y="48">audio data</text>
+<text class="acc" x="330" y="48">orange callout = don't-skip step</text>
+
+<rect class="board" x="30" y="60" width="620" height="338" rx="10"/>
+<line x1="44" y1="80" x2="636" y2="80" stroke="#E24B4A" stroke-width="2"/><text class="ts" x="44" y="76">+5V rail (Pi p2)</text>
+<line x1="44" y1="92" x2="636" y2="92" stroke="#378ADD" stroke-width="2"/><text class="ts" x="44" y="106">GND rail (Pi p6)</text>
+<text class="acc" x="360" y="106" fill="#854F0B">+3.3V: Pi p1 -&gt; PCM1808 VDD only</text>
+
+<rect class="gray" x="44" y="132" width="104" height="190" rx="6"/>
+<text class="t" x="52" y="152">Pi cobbler</text>
+<text class="ts" x="52" y="172">40-pin ribbon<tspan x="52" dy="14">+5V +3V3 GND</tspan><tspan x="52" dy="14">GPIO 4,18,19,</tspan><tspan x="52" dy="14">20,21</tspan></text>
+
+<text class="ts" x="170" y="126">Guitar ¼in -&gt;</text>
+<rect class="purple" x="168" y="132" width="170" height="190" rx="6"/>
+<text class="t" x="176" y="152">Guitar front-end</text>
+<text class="ts" x="176" y="172">MCP6002 buffer + gain<tspan x="176" dy="14">VBIAS 2.5V (R1/R2/C1)</tspan><tspan x="176" dy="14">Cin·Rbias·Rg·Rf</tspan><tspan x="176" dy="14">Cout·Rs·Ca · C8 bypass</tspan></text>
+<text class="acc" x="176" y="246" fill="#534AB7">RV1 -&gt; x3 nominal</text>
+
+<rect class="teal" x="358" y="132" width="120" height="190" rx="6"/>
+<text class="t" x="366" y="152">PCM1808 ADC</text>
+<text class="ts" x="366" y="172">VCC 5V · VDD 3V3<tspan x="366" dy="14">VREF decouple</tspan><tspan x="366" dy="14">SCKI &lt;- MCLK</tspan><tspan x="366" dy="14">DOUT -&gt; GPIO20</tspan></text>
+<text class="acc" x="366" y="246">MD0/MD1/FMT-&gt;GND</text>
+
+<rect class="coral" x="498" y="132" width="134" height="190" rx="6"/>
+<text class="t" x="506" y="152">GY-PCM5102 DAC</text>
+<text class="ts" x="506" y="172">VIN 5V (onboard LDO)<tspan x="506" dy="14">SCK -&gt; GND (PLL)</tspan><tspan x="506" dy="14">FLT/DEMP/FMT = L</tspan><tspan x="506" dy="14">3.5mm out -&gt; amp</tspan></text>
+<text class="acc" x="506" y="246">XSMT pad = H !</text>
+
+<line x1="338" y1="210" x2="356" y2="210" stroke="#534AB7" stroke-width="2" marker-end="url(#ar)"/>
+<text class="ts" x="330" y="200">VINL</text>
+
+<line x1="96" y1="322" x2="96" y2="346" stroke="#378ADD" stroke-width="2"/>
+<line x1="96" y1="346" x2="565" y2="346" stroke="#378ADD" stroke-width="2"/>
+<line x1="418" y1="346" x2="418" y2="324" stroke="#378ADD" stroke-width="2" marker-end="url(#ar)"/>
+<line x1="565" y1="346" x2="565" y2="324" stroke="#378ADD" stroke-width="2" marker-end="url(#ar)"/>
+<text class="ts" x="110" y="364">I²S0 bus from cobbler: BCLK · LRCLK · MCLK-&gt;ADC(GPIO4) · DOUT-&gt;Pi · DIN-&gt;DAC</text>
+<text class="ts" x="110" y="380">Keep the front-end cluster left, away from these clock jumpers. Single star ground.</text>
+</svg>

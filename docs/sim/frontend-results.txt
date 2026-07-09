@@ -1,0 +1,22 @@
+==== DC OP (expect ~2.5V) ====
+v(vbias) = 2.499998e+00
+v(bo) = 2.499995e+00
+v(feo) = 2.499983e+00
+v(vinl) = 2.500000e+00
+==== AC gain (dB) vs freq; input=0dB so vdb(feo)=gain ====
+gain_1k             =  9.54232e+00
+gain_100            =  9.53512e+00
+gain_20k            =  9.54239e+00
+flo_3db             =  2.60637e+00
+Initial Transient Solution
+==== TRAN hot-HB 1Vpp in (0.5V amp,1kHz): expect feo 1.0-4.0V, no clip ====
+vmax                =  3.99669e+00 at=  7.24955e-03
+vmin                =  9.96504e-01 at=  4.74924e-03
+Initial Transient Solution
+==== TRAN overdrive 1.6Vpp in (0.8V amp): x3=4.8Vpp should CLIP at rails ====
+od_vmax             =  4.89456e+00 at=  6.25015e-03
+od_vmin             =  9.44047e-02 at=  3.74780e-03
+
+==== REALISTIC OP-AMP (VMARGIN=0.6, OPA1662 worst-case 0.6-4.4V): hot-HB 1Vpp still no clip ====
+vmax                =  3.99669e+00 at=  7.24955e-03
+vmin                =  9.96504e-01 at=  4.74924e-03

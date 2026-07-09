@@ -1,0 +1,78 @@
+<svg width="100%" viewBox="0 0 680 466" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>GuitarDAWLiteOS guitar analog front-end schematic</title>
+<desc>Single 5V guitar front-end: 0.1uF input coupling, 1M bias to a 2.5V mid-rail, x1 buffer U1A, non-inverting x3 gain U1B with trim, 1uF output coupling, 1k+1nF anti-alias into PCM1808 VINL. SPICE-verified.</desc>
+<style>
+text{font-family:-apple-system,Helvetica,Arial,sans-serif;fill:#2C2C2A}
+.lbl{font-size:12px;fill:#5F5E5A}
+.rd{font-size:12px;font-weight:500;fill:#2C2C2A}
+.acc{font-size:12px;font-weight:500;fill:#534AB7}
+.w,.cmp{stroke:#2C2C2A;stroke-width:1.4;fill:none}
+.dot{fill:#2C2C2A}
+</style>
+
+<rect class="cmp" x="40" y="135" width="30" height="30" rx="2"/>
+<text class="rd" x="42" y="128">J1</text>
+<text class="lbl" x="38" y="182">guitar 1/4in</text>
+<line class="w" x1="55" y1="165" x2="55" y2="186"/>
+<line class="w" x1="48" y1="186" x2="62" y2="186"/><line class="w" x1="51" y1="189" x2="59" y2="189"/><line class="w" x1="53.5" y1="192" x2="56.5" y2="192"/>
+<line class="w" x1="70" y1="150" x2="92" y2="150"/>
+
+<line class="w" x1="96" y1="142" x2="96" y2="158"/><line class="w" x1="102" y1="142" x2="102" y2="158"/>
+<line class="w" x1="92" y1="150" x2="96" y2="150"/><line class="w" x1="102" y1="150" x2="124" y2="150"/>
+<text class="lbl" x="84" y="132">Cin 0.1uF</text>
+
+<circle class="dot" cx="124" cy="150" r="2.5"/>
+<line class="w" x1="124" y1="150" x2="124" y2="112"/><rect class="cmp" x="119" y="88" width="10" height="24"/><line class="w" x1="124" y1="88" x2="124" y2="74"/>
+<text class="acc" x="110" y="70">VBIAS</text><text class="lbl" x="132" y="104">Rbias 1M</text>
+<line class="w" x1="124" y1="150" x2="146" y2="150"/><line class="w" x1="146" y1="150" x2="146" y2="142"/><line class="w" x1="146" y1="142" x2="150" y2="142"/>
+
+<path class="cmp" d="M150 130 L150 170 L196 150 Z"/>
+<text class="lbl" x="153" y="146">+</text><text class="lbl" x="153" y="162">-</text><text class="rd" x="156" y="154">U1A</text>
+<line class="w" x1="196" y1="150" x2="230" y2="150"/>
+<circle class="dot" cx="210" cy="150" r="2.5"/>
+<line class="w" x1="210" y1="150" x2="210" y2="178"/><line class="w" x1="210" y1="178" x2="146" y2="178"/><line class="w" x1="146" y1="178" x2="146" y2="158"/><line class="w" x1="146" y1="158" x2="150" y2="158"/>
+
+<line class="w" x1="230" y1="150" x2="230" y2="142"/><line class="w" x1="230" y1="142" x2="244" y2="142"/>
+<path class="cmp" d="M244 130 L244 170 L290 150 Z"/>
+<text class="lbl" x="247" y="146">+</text><text class="lbl" x="247" y="162">-</text><text class="rd" x="250" y="154">U1B</text>
+<line class="w" x1="290" y1="150" x2="320" y2="150"/>
+<line class="w" x1="244" y1="158" x2="230" y2="158"/><line class="w" x1="230" y1="158" x2="230" y2="210"/>
+<circle class="dot" cx="230" cy="210" r="2.5"/>
+<line class="w" x1="230" y1="210" x2="230" y2="216"/><rect class="cmp" x="225" y="216" width="10" height="24"/><line class="w" x1="230" y1="240" x2="230" y2="258"/>
+<text class="acc" x="212" y="270">VBIAS</text><text class="lbl" x="238" y="232">Rg 10k</text>
+<line class="w" x1="230" y1="210" x2="252" y2="210"/><rect class="cmp" x="252" y="205" width="26" height="10"/><line class="w" x1="278" y1="210" x2="305" y2="210"/><line class="w" x1="305" y1="210" x2="305" y2="150"/><circle class="dot" cx="305" cy="150" r="2.5"/>
+<text class="lbl" x="244" y="201">Rf 20k (trim)</text>
+
+<line class="w" x1="320" y1="150" x2="334" y2="150"/>
+<line class="w" x1="338" y1="142" x2="338" y2="158"/><line class="w" x1="344" y1="142" x2="344" y2="158"/>
+<line class="w" x1="334" y1="150" x2="338" y2="150"/><line class="w" x1="344" y1="150" x2="372" y2="150"/>
+<text class="lbl" x="326" y="132">Cout 1uF</text>
+
+<line class="w" x1="372" y1="150" x2="382" y2="150"/><rect class="cmp" x="382" y="145" width="26" height="10"/><line class="w" x1="408" y1="150" x2="430" y2="150"/>
+<text class="lbl" x="384" y="138">Rs 1k</text>
+
+<circle class="dot" cx="430" cy="150" r="2.5"/>
+<line class="w" x1="430" y1="150" x2="430" y2="184"/><line class="w" x1="418" y1="184" x2="442" y2="184"/><line class="w" x1="418" y1="190" x2="442" y2="190"/><line class="w" x1="430" y1="190" x2="430" y2="198"/>
+<line class="w" x1="423" y1="198" x2="437" y2="198"/><line class="w" x1="426" y1="201" x2="434" y2="201"/><line class="w" x1="428.5" y1="204" x2="431.5" y2="204"/>
+<text class="lbl" x="438" y="184">Ca 1nF</text>
+<line class="w" x1="430" y1="150" x2="468" y2="150"/><text class="acc" x="472" y="153">VINL -&gt; PCM1808 p13</text>
+
+<line class="w" x1="80" y1="250" x2="100" y2="250"/><line class="w" x1="90" y1="250" x2="90" y2="264"/><text class="lbl" x="72" y="246">+5V</text>
+<rect class="cmp" x="85" y="264" width="10" height="24"/><line class="w" x1="90" y1="288" x2="90" y2="306"/><text class="lbl" x="98" y="280">R1 10k</text>
+<circle class="dot" cx="90" cy="306" r="2.5"/><text class="acc" x="100" y="303">VBIAS 2.5V</text>
+<line class="w" x1="90" y1="306" x2="128" y2="306"/><line class="w" x1="128" y1="306" x2="128" y2="318"/><line class="w" x1="116" y1="318" x2="140" y2="318"/><line class="w" x1="116" y1="324" x2="140" y2="324"/><line class="w" x1="128" y1="324" x2="128" y2="332"/>
+<line class="w" x1="121" y1="332" x2="135" y2="332"/><line class="w" x1="124" y1="335" x2="132" y2="335"/><line class="w" x1="126.5" y1="338" x2="129.5" y2="338"/>
+<text class="lbl" x="146" y="316">C1 10uF</text>
+<line class="w" x1="90" y1="306" x2="90" y2="318"/><rect class="cmp" x="85" y="318" width="10" height="24"/><line class="w" x1="90" y1="342" x2="90" y2="358"/><text class="lbl" x="98" y="334">R2 10k</text>
+<line class="w" x1="83" y1="358" x2="97" y2="358"/><line class="w" x1="86" y1="361" x2="94" y2="361"/><line class="w" x1="88.5" y1="364" x2="91.5" y2="364"/>
+
+<text class="acc" x="430" y="243">VINR p14</text>
+<line class="w" x1="496" y1="240" x2="556" y2="240"/><line class="w" x1="556" y1="240" x2="556" y2="250"/><line class="w" x1="544" y1="250" x2="568" y2="250"/><line class="w" x1="544" y1="256" x2="568" y2="256"/><line class="w" x1="556" y1="256" x2="556" y2="264"/>
+<line class="w" x1="549" y1="264" x2="563" y2="264"/><line class="w" x1="552" y1="267" x2="560" y2="267"/><line class="w" x1="554.5" y1="270" x2="557.5" y2="270"/>
+<text class="lbl" x="500" y="234">Cr 1uF</text>
+
+<text class="rd" x="40" y="392">Notes</text>
+<text class="lbl" x="40" y="410">U1 = OPA1662 (low-noise audio) or OPA2353 (RRIO single-5V).  V+ = +5V,  V- = GND.</text>
+<text class="lbl" x="40" y="426">Gain x3 nominal: Rf = 20k (10k + 100k trimpot RV1 = x2 to x12).  Bias = VBIAS mid-rail, NOT ADC VREF.  +0.1uF bypass at U1 V+.</text>
+<text class="lbl" x="40" y="442">SPICE-verified: DC 2.5V . gain 9.54 dB (x3) flat 20Hz-20kHz . -3 dB at 2.6 Hz . hot-HB 1Vpp -&gt; 1.0-4.0V, no clip.</text>
+</svg>

@@ -1,0 +1,26 @@
+<svg width="100%" viewBox="0 0 680 410" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>GuitarDAWLiteOS codec and power sheet</title>
+<desc>Pi 5 J8 header, PCM1808 ADC, and GY-PCM5102 DAC with every pin assigned to a net, decoupling, strapping, and power. Nets joined by name.</desc>
+<style>
+text{font-family:-apple-system,Helvetica,Arial,sans-serif;fill:#2C2C2A}
+.t{font-size:13px;font-weight:500;fill:#2C2C2A}.ts{font-size:12px;fill:#444441}
+.gray{fill:#F1EFE8;stroke:#5F5E5A;stroke-width:1}.teal{fill:#E1F5EE;stroke:#0F6E56;stroke-width:1}.coral{fill:#FAECE7;stroke:#993C1D;stroke-width:1}
+</style>
+
+<rect class="gray" x="40" y="70" width="180" height="158" rx="6"/>
+<text class="t" x="52" y="92">Raspberry Pi 5 . J8</text>
+<text class="ts" x="52" y="112">p2 = +5V<tspan x="52" dy="15">p1 = +3V3</tspan><tspan x="52" dy="15">p6 = GND</tspan><tspan x="52" dy="15">p7 GPIO4 -&gt; MCLK</tspan><tspan x="52" dy="15">p12 GPIO18 -&gt; BCLK</tspan><tspan x="52" dy="15">p35 GPIO19 -&gt; LRCLK</tspan><tspan x="52" dy="15">p38 GPIO20 &lt;- CAPDAT</tspan><tspan x="52" dy="15">p40 GPIO21 -&gt; PLAYDAT</tspan></text>
+
+<rect class="teal" x="252" y="70" width="188" height="300" rx="6"/>
+<text class="t" x="264" y="92">PCM1808 ADC . U2</text>
+<text class="ts" x="264" y="112">1 VREF . dec 0.1uF+10uF<tspan x="264" dy="15">2 AGND . GND</tspan><tspan x="264" dy="15">3 VCC . +5V (via FB1)</tspan><tspan x="264" dy="15">4 VDD . +3V3</tspan><tspan x="264" dy="15">5 DGND . GND</tspan><tspan x="264" dy="15">6 SCKI &lt;- MCLK</tspan><tspan x="264" dy="15">7 LRCK &lt;- LRCLK</tspan><tspan x="264" dy="15">8 BCK &lt;- BCLK</tspan><tspan x="264" dy="15">9 DOUT -&gt; CAPDAT</tspan><tspan x="264" dy="15">10 MD0 . GND</tspan><tspan x="264" dy="15">11 MD1 . GND</tspan><tspan x="264" dy="15">12 FMT . GND</tspan><tspan x="264" dy="15">13 VINL &lt;- front-end (U1)</tspan><tspan x="264" dy="15">14 VINR &lt;- Cr 1uF -&gt; AGND</tspan></text>
+
+<rect class="coral" x="470" y="70" width="170" height="210" rx="6"/>
+<text class="t" x="482" y="92">GY-PCM5102 DAC . U3</text>
+<text class="ts" x="482" y="112">VIN . +5V<tspan x="482" dy="15">GND . GND</tspan><tspan x="482" dy="15">SCK . GND (int PLL)</tspan><tspan x="482" dy="15">BCK &lt;- BCLK</tspan><tspan x="482" dy="15">LCK &lt;- LRCLK</tspan><tspan x="482" dy="15">DIN &lt;- PLAYDAT</tspan><tspan x="482" dy="15">FLT/DEMP/FMT pad . L</tspan><tspan x="482" dy="15">XSMT pad . H (+3V3)</tspan><tspan x="482" dy="15">OUT L/R/G -&gt; line out</tspan></text>
+
+<text class="t" x="40" y="320">Notes</text>
+<text class="ts" x="40" y="340">Nets joined by name: +5V . +3V3 . GND . MCLK . BCLK . LRCLK . CAPDAT . PLAYDAT.</text>
+<text class="ts" x="40" y="358">Decoupling 0.1uF+10uF at U2 VCC, VDD, VREF (to AGND). FB1 = ferrite on +5V to U2 VCC.</text>
+<text class="ts" x="40" y="376">AGND = DGND, single star to one Pi GND. U3 module self-decoupled; output RC 470ohm + 2.2nF/ch.</text>
+</svg>
