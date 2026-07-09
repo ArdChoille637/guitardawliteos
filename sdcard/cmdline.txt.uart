@@ -1,0 +1,1 @@
+gpiofanpin=45 socmaxtemp=60 fast=true logdev=ttyS11
