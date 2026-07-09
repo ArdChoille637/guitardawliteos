@@ -1,0 +1,21 @@
+(kicad_sch
+	(version 20260306)
+	(generator "eeschema")
+	(generator_version "10.0")
+	(uuid "8571555d-609c-4523-b73a-fd5123bef670")
+	(paper "A4")
+	(title_block
+		(title "GuitarDAWLiteOS audio HAT")
+		(date "2026-06-29")
+		(rev "A")
+		(comment 1 "Open hardware - ships with GuitarDAWLiteOS")
+		(comment 2 "Draw the schematic by following docs/pcb-learning-path.md")
+	)
+	(lib_symbols)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)

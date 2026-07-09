@@ -1,0 +1,10 @@
+(sym_lib_table
+	(version 7)
+	(lib
+		(name "GuitarDAWLiteOS")
+		(type "KiCad")
+		(uri "${KIPRJMOD}/guitardawliteos.kicad_sym")
+		(options "")
+		(descr "GuitarDAWLiteOS custom symbols: PCM1808 ADC, PCM5102A DAC")
+	)
+)
