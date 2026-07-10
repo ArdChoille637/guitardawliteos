@@ -47,6 +47,7 @@ Bare-metal **Raspberry Pi 5** loop recorder / guitarist workbench. I²S audio (P
 - **[docs/parts-order.md](docs/parts-order.md)** — **DigiKey prototyping order** (verified live 2026-07-01): breadboard + codecs + front-end + tape Level A + Touch Display 2, with MPNs, quantities, substitutions for dead parts, and the not-DigiKey list.
 - **[docs/retro-deck-design.md](docs/retro-deck-design.md)** — **Phase-2 architecture (verified)**: Touch Display 2 via Circle `addon/rp1dsi` (zero GPIO), cassette tape loop as analog insert (Level A ships in rev B, VINR return + REM punch-in), three-layer retro mechanicals (HAT+ core / faceplate PCB / metal+wood chassis), rev-B GPIO budget.
 - **[docs/breadboard-build.md](docs/breadboard-build.md)** + [breadboard-layout.svg](docs/breadboard-layout.svg) — solderless build with the GY modules + a DIP op-amp; placement + step-by-step + gotcha checklist.
+- **[docs/adc-hookup.md](docs/adc-hookup.md)** — **bench card: every wire for Pi 5 + PCM1808 + Nano ESP32 capture hookup** (power, ground, straps, clocks, data, order of operations).
 - **[docs/build-setup.md](docs/build-setup.md)** — toolchain, build, SD flash, UART.
 - Original Phase-1 research reference: project `CLAUDE.md` (the GuitarDAWLiteOS research doc).
 

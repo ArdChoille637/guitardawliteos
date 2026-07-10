@@ -139,7 +139,7 @@ TShutdownMode CKernel::Run (void)
 	m_Cores.StartWorkers ();
 
 	// ── Thermal management (unchanged from M0) ───────────────────────────
-	// cmdline.txt must carry: gpiofanpin=45 socmaxtemp=60
+	// cmdline.txt must carry: gpiofanpin=45 socmaxtemp=45
 	// With gpiofanpin set, CCPUThrottle switches the Active Cooler fan on
 	// at socmaxtemp (hysteresis: off again 5 C below). The fan is driven ON
 	// from the CCPUThrottle constructor, so it runs full-speed from power-on
@@ -158,7 +158,7 @@ TShutdownMode CKernel::Run (void)
 		m_Logger.Write (FromKernel, LogWarning,
 				"gpiofanpin= is NOT set - Active Cooler will not run!");
 		m_Logger.Write (FromKernel, LogWarning,
-				"Add \"gpiofanpin=45 socmaxtemp=60\" to cmdline.txt");
+				"Add \"gpiofanpin=45 socmaxtemp=45\" to cmdline.txt");
 	}
 	else
 	{

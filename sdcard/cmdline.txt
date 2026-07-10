@@ -1,1 +1,1 @@
-gpiofanpin=45 socmaxtemp=60 fast=true
+gpiofanpin=45 socmaxtemp=45 fast=true
