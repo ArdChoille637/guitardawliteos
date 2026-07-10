@@ -21,20 +21,20 @@ Bare-metal **Raspberry Pi 5** loop recorder / guitarist workbench. I²S audio (P
 
 ## Hardware (Phase 1)
 - Raspberry Pi 5 · microSD (Class-10/UHS-I) · HDMI monitor ≤1080p · USB-serial for the UART debug console.
-- PCM1808 ADC (slave, strap-only) · PCM5102A / GY-PCM5102 DAC (strap-only).
+- PCM1808 ADC (**bus master**, strap-only) · PCM5102A / GY-PCM5102 DAC (strap-only).
 - **Arduino Nano ESP32** — external MCLK generator (see [esp32-mclk/](esp32-mclk/)), electrically independent of the Pi 5 except for the MCLK line + shared ground.
 
-**Verified pin map** ([details](planning/build-plan.md#milestone-2--hardware-bring-up-i²s-loopback)):
+**Verified pin map** ([details](planning/build-plan.md#milestone-2--hardware-bring-up-i²s-loopback)) — **the PCM1808 masters the I²S bus** (2026-07-10 pivot: two free-running crystals can't stay fs-locked, so the ADC divides the Nano's MCLK into BCK/LRCK and the Pi runs I²S slave — see [docs/claim-verification.md](docs/claim-verification.md)):
 
 | Source | Signal | → |
 |--:|---|---|
-| Pi GPIO18 | BCLK | both codecs |
-| Pi GPIO19 | LRCLK/FS | both codecs |
-| Pi GPIO20 | data IN (capture) | ← PCM1808 DOUT |
+| **PCM1808 BCK** | BCLK 3.072 MHz (ADC-driven) | Pi GPIO18 + DAC BCK |
+| **PCM1808 LRCK** | LRCLK 48 kHz (ADC-driven) | Pi GPIO19 + DAC LCK |
+| PCM1808 DOUT | data IN (capture) | → Pi GPIO20 |
 | Pi GPIO21 | data OUT (playback) | → PCM5102A DIN |
 | **Nano ESP32 D2/GPIO5** | MCLK 12.288 MHz | → PCM1808 SCKI only |
 
-⚠️ **PCM5102A breakout: set the XSMT pad HIGH (unmute)** — ships muted. ⚠️ **PCM1808: strap MD1=MD0=FMT=GND before power-on.**
+⚠️ **PCM5102A breakout: set the XSMT pad HIGH (unmute)** — ships muted. ⚠️ **PCM1808: strap MD1=MD0=HIGH (master 256fs), FMT=GND, before power-on** — board-specific pin table in [docs/adc-hookup.md](docs/adc-hookup.md).
 
 ## Map
 - **[planning/build-plan.md](planning/build-plan.md)** — milestones 0–6, tasks with effort, risk register, pinned dependencies.

@@ -118,20 +118,27 @@ TShutdownMode CKernel::Run (void)
 				: (m_bScreenOK ? "screen" : (m_bSerialOK ? "serial" : "null - nothing visible!")));
 
 	// ── Audio engine ─────────────────────────────────────────────────────
-	// Full-duplex I2S0: BCLK/LRCLK out (master), PCM1808 in on GPIO20,
-	// PCM5102A out on GPIO21. MCLK comes from the external Nano ESP32
-	// (Spike B) — nothing to do here for it. Audio failing does NOT gate
-	// the thermal loop: on the bench with no codecs wired, capture reads
-	// whatever floats on GPIO20 and playback drives GPIO21 — harmless,
-	// and the stats prove the engine plumbing either way.
+	// Full-duplex I2S as SLAVE (see config.h): the PCM1808 masters the
+	// bus, dividing the Nano ESP32's 12.288 MHz SCKI into BCK/LRCK.
+	// Capture in on GPIO20, playback out on GPIO21, clocks IN on 18/19.
+	// Audio failing does NOT gate the thermal loop. With no ADC wired/
+	// clocked there are simply no bus clocks, so no DMA completions:
+	// cap/play stay frozen at 0 — expected on a bare-board boot.
 	m_bAudioOK = m_AudioEngine.Start ();
 	m_Logger.Write (FromKernel, m_bAudioOK ? LogNotice : LogError,
-			"I2S full duplex (TXRX): %s  (48 kHz, %u frames/chunk, "
+			"I2S full duplex (TXRX, %s): %s  (48 kHz, %u frames/chunk, "
 			"ring %u KB, monitor FIFO %u frames)",
+			GDAW_I2S_SLAVE ? "slave - ADC masters the bus" : "master",
 			m_bAudioOK ? "RUNNING" : "FAILED to start",
 			GDAW_CHUNK_WORDS / 2,
 			(unsigned) (TCaptureRing::CAPACITY * sizeof (u32) / 1024),
 			GDAW_MONITOR_FIFO_CHUNKS * GDAW_CHUNK_WORDS / 2);
+	if (GDAW_I2S_SLAVE && m_bAudioOK)
+	{
+		m_Logger.Write (FromKernel, LogNotice,
+				"slave mode: cap/play stay 0 until the PCM1808 is "
+				"wired, powered and fed MCLK - that is expected");
+	}
 
 	// Release the worker cores (they've been spinning on the start flag
 	// since m_Cores.Initialize()). Workers tolerate a dead audio engine —

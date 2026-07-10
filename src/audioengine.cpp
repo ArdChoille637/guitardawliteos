@@ -9,12 +9,14 @@
 
 CAudioEngine::CAudioEngine (CInterruptSystem *pInterrupt, TCaptureRing *pRing,
 			    TAudioStats *pStats)
-:	// Pi is I2S master (bSlave=FALSE): BCLK/LRCLK out of GPIO18/19 from
-	// pll_audio. No I2C controller: the PCM5102A is strap-configured and
-	// the PCM1808 has no control port at all (pI2CMaster=0 makes the
-	// driver's codec-probe factory a no-op).
+:	// Clock topology per config.h: PCM1808 is bus master (divides the
+	// external 12.288 MHz SCKI), Pi consumes BCK/LRCK as slave
+	// (GDAW_I2S_SLAVE -> Circle uses the RP1 I2S1 instance, AltFn4 on
+	// the same GPIO18-21). No I2C controller: the PCM5102A is
+	// strap-configured and the PCM1808 has no control port at all
+	// (pI2CMaster=0 makes the driver's codec-probe factory a no-op).
 	CI2SSoundBaseDevice (pInterrupt, GDAW_SAMPLE_RATE, GDAW_CHUNK_WORDS,
-			     FALSE, 0, 0, DeviceModeTXRX),
+			     GDAW_I2S_SLAVE, 0, 0, DeviceModeTXRX),
 	m_pRing (pRing),
 	m_pStats (pStats),
 	m_nMonitorHead (0),

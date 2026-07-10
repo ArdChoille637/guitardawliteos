@@ -38,19 +38,19 @@ These two spikes retire the highest-uncertainty items surfaced by verification. 
 ## Milestone 2 — Hardware bring-up: I²S loopback
 **Full electrical review + wiring diagram done:** [docs/hardware-review.md](../docs/hardware-review.md), [docs/wiring-diagram.svg](../docs/wiring-diagram.svg). Key additions beyond the pin map below: PCM1808 needs a **5 V analog rail** (not 3.3 V), a **guitar front-end** (buffer → ×3 gain → bias-to-VBIAS mid-rail → AA) is mandatory, op-amp runs on 5 V, no level shifters, power off header 5 V + local LDO (not header 3V3). **Buildable schematic** ([docs/schematic.md](../docs/schematic.md), SPICE-verified + ERC-reviewed), **KiCad netlist + symbols** ([kicad/](../kicad/), bare-chip, ERC-checked), and a **breadboard build guide** ([docs/breadboard-build.md](../docs/breadboard-build.md)) are done.
 
-**Corrected pin map (`[CORR]` C2 — verified against Circle `i2ssoundbasedevice-rp1.cpp`):**
+**Pin map (updated 2026-07-10 — ADC is the bus master; see claim-verification.md and [docs/adc-hookup.md](../docs/adc-hookup.md)):**
 
-| Source | Circle name | Signal | Direction | Connects to |
-|--------:|-------------|--------|-----------|-------------|
-| Pi GPIO18 | `PCMCLK` | BCLK | Pi → both | PCM1808 BCK, PCM5102A BCK |
-| Pi GPIO19 | `PCMFS`  | LRCLK/FS | Pi → both | PCM1808 LRCK, PCM5102A LCK |
-| Pi GPIO20 | `PCMDIN` | data **IN** (capture) | ADC → Pi | **PCM1808 DOUT** |
-| Pi GPIO21 | `PCMDOUT`| data **OUT** (playback) | Pi → DAC | **PCM5102A DIN** |
-| **Nano ESP32 D2/GPIO5** | — (ESP-IDF `i2s_std` MCLK-out) | MCLK 12.288 MHz | ESP32 → ADC | **PCM1808 SCKI** only — *not a Pi GPIO*, see Spike B resolution above |
+| Source | Signal | Direction | Connects to |
+|--------:|--------|-----------|------|
+| **PCM1808 BCK** | BCLK 3.072 MHz | **ADC → Pi + DAC** | Pi GPIO18, PCM5102A BCK |
+| **PCM1808 LRCK** | LRCLK/FS 48 kHz | **ADC → Pi + DAC** | Pi GPIO19, PCM5102A LCK |
+| PCM1808 DOUT | data **IN** (capture) | ADC → Pi | Pi GPIO20 |
+| Pi GPIO21 | data **OUT** (playback) | Pi → DAC | **PCM5102A DIN** |
+| **Nano ESP32 D2/GPIO5** | MCLK/SCKI 12.288 MHz | ESP32 → ADC | **PCM1808 SCKI** only |
 
-Pi 5 I²S0 is **master** (clock producer) for BCLK/LRCLK/data. `[CORR-2]` SD and HDMI are on the BCM2712 and independent of this bus.
+The **PCM1808 is I²S master** (divides SCKI to BCK/LRCK); the Pi runs slave (`GDAW_I2S_SLAVE`, Circle RP1 **I2S1** instance, same GPIO18-21 pads via AltFn4). Rationale: two free-running crystals can't stay fs-locked; the chip's §7.4.2 resync would mute audio continuously in the Pi-master arrangement. `[CORR-2]` SD and HDMI are on the BCM2712 and independent of this bus.
 
-- [ ] **2.1 PCM1808 strapping** (S) `[CORR D1]` — **before power-on**: MD1=GND, MD0=GND (slave, 256/384/512fs autodetect), FMT=GND (I²S, 24-bit). (Internal 50 kΩ pulldowns mean floating=low, but tie explicitly.) SCKI←**Nano ESP32 D2**, BCK←Pi GPIO18, LRCK←Pi GPIO19, DOUT→Pi GPIO20.
+- [ ] **2.1 PCM1808 strapping** (S) — **before power-on**: **MD1=HIGH, MD0=HIGH (MASTER, 256fs → SCKI/256 = 48 kHz)**, FMT=GND (I²S, 24-bit). SCKI←**Nano ESP32 D2**, BCK→Pi GPIO18, LRCK→Pi GPIO19, DOUT→Pi GPIO20. Board-specific pin table (purple CJMCU-1808 breakout: no onboard regulator — both 5 V and 3.3 V rails required; analog in = RIN/–/LIN edge pads): [docs/adc-hookup.md](../docs/adc-hookup.md).
 - [ ] **2.2 PCM5102A (GY-PCM5102 module) strapping** (S) `[CORR-5]` — solder pads: FLT=L, DEMP=L, **XSMT=H (UNMUTE — the #1 silent-output gotcha)**, **FMT=L (I²S)**. SCK→GND (internal PLL; no MCLK needed). DIN←GPIO21, BCK←GPIO18, LCK←GPIO19. Power per module (3.3 V).
 - [ ] **2.3 Playback smoke test** (S) — run Circle `sample/34-sounddevices` (I²S/PCM5102A) on Pi 5; confirm a test tone out of the PCM5102A. Validates `[CORR-5]` strapping + BCLK/LRCLK.
 - [ ] **2.4 Capture smoke test** (M) — run/adapt Circle `sample/42-soundinput`; confirm the PCM1808 produces non-zero samples (depends on Spike B MCLK). Format is fixed standard-I²S 24-in-32 `[CORR C3]` — no format selection to get wrong.
