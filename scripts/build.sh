@@ -116,11 +116,17 @@ if [ -f "$KELF" ]; then
   echo ">> size check: _end $BSS_END < MEM_KERNEL_END $(printf 0x%x "$KEND") OK"
 fi
 
-# 4. Refresh SD staging (device trees are kept; only kernel + config refreshed)
+# 4. Refresh SD staging. ONLY the kernel is overwritten: sdcard/config.txt
+# carries project-specific settings on top of Circle's config64.txt —
+# notably device_tree_address=0x2000000, which moves the DTB clear of our
+# enlarged KERNEL_MAX_SIZE region (the firmware's default placement can
+# land inside the kernel BSS and get zeroed before Circle reads it) —
+# so it must never be clobbered from the Circle template. Seed it from
+# the template only if it doesn't exist yet.
 echo ">> staging $PROJ/sdcard/"
 mkdir -p "$PROJ/sdcard/overlays"
 cp "$KIMG" "$PROJ/sdcard/kernel_2712.img"
-cp "$CIRCLE/boot/config64.txt" "$PROJ/sdcard/config.txt"
+[ -f "$PROJ/sdcard/config.txt" ] || cp "$CIRCLE/boot/config64.txt" "$PROJ/sdcard/config.txt"
 
 # 4b. Verify the boot-critical files a Pi 5 needs are actually staged — the
 # kernel alone does not boot (firmware wants the DTBs + overlay; cmdline.txt
