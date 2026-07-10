@@ -54,7 +54,7 @@ and the Pi's / Nano ESP32's 3.3 V clocks are fine into the PCM1808.
 
 | PCM1808 pin | Connect to |
 |---|---|
-| **13 VINL** | The guitar **front-end** output ([schematic.md](schematic.md)). For a first smoke test without the front-end: a **line-level** source through a **1 µF** cap. Never the guitar directly. |
+| **13 VINL** | The guitar **front-end** output ([schematic.md](schematic.md), or the [TL072-on-9V variant](tl072-frontend.md)). For a first smoke test without the front-end: a **line-level** source through a **1 µF** cap. Never the guitar directly. |
 | **14 VINR** | **1 µF to GND** (AC-ground the unused channel) |
 
 ## Order of operations

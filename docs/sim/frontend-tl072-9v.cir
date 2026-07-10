@@ -1,0 +1,83 @@
+* GuitarDAWLiteOS guitar front-end - TL072 on single 9V variant
+* (drawer-parts build: classic TL072 JFET op-amp, 9V pedal supply/battery)
+*
+* Same topology as frontend.cir, three changes:
+*   Vcc = 9V (TL072 out of spec at 5V: needs ~7V+ total, swings ~1.5V from rails)
+*   VBIAS ~4.9V (10k/12k): keeps the JFET input common-mode >= V- + 4V
+*   VMARGIN = 1.5 (TL072 worst-case output swing limit from each rail)
+* Output coupling cap isolates the 9V domain from the ADC (PCM1808 self-
+* biases its input after the cap), so the ADC side is unchanged.
+*
+* PASS criteria:
+*   DC: vbias ~4.9V, all nodes centered there
+*   AC: gain ~9.5dB (x3), flat 20Hz-20kHz
+*   TRAN hot-HB 1Vpp: feo swings 3Vpp around 4.9V (3.4-6.4V), no clip,
+*     AND buffer input nbi stays >= 4.0V (TL072 guaranteed CM low = V- + 4V)
+*
+* NB: AC runs with VMARGIN=0.02 (ideal) — ngspice-46's B-source AC
+* linearization produces NaN with the wide clamp, and small-signal gain
+* is clamp-independent anyway. The .control block then switches to
+* VMARGIN=1.5 (TL072 real swing limit) for the transient clip tests.
+.param VMARGIN=0.02
+.subckt opamp inp inn out vcc vee
+Bamp nint 0 V = max( V(vee)+{VMARGIN}, min( V(vcc)-{VMARGIN}, 1e6*(V(inp)-V(inn)) ) )
+Rout nint out 75
+.ends
+
+Vcc vcc 0 9
+R1 vcc vbias 10k
+R2 vbias 0   12k
+C1 vbias 0   10u
+
+Vin in 0 SIN(0 0.5 1k) AC 1
+Cin in nbi 0.1u
+Rbias nbi vbias 1Meg
+Xbuf nbi bo bo vcc 0 opamp
+
+Rg ninv vbias 10k
+Rf ninv feo  20k
+Xgain bo ninv feo vcc 0 opamp
+
+Cout feo aa 1u
+Rs aa vinl 1k
+Ca vinl 0 1n
+Radc vinl vrefadc 60k
+Vrefadc vrefadc 0 2.5
+
+.control
+  op
+  echo "==== DC OP (expect vbias ~4.9V; vinl ~2.5V from ADC self-bias) ===="
+  print v(vbias) v(bo) v(feo) v(vinl)
+
+  ac dec 100 0.05 2meg
+  echo "==== AC gain (dB): expect ~9.5dB flat 20Hz-20kHz ===="
+  meas ac gain_1k   find vdb(feo) at=1000
+  meas ac gain_100  find vdb(feo) at=100
+  meas ac gain_20k  find vdb(feo) at=20000
+  meas ac flo_3db   when vdb(feo)=6.54 rise=1
+  meas ac fhi_3db   when vdb(feo)=6.54 fall=1
+
+  alterparam VMARGIN=1.5
+  reset
+
+  tran 5u 8m 2m
+  echo "==== TRAN hot-HB 1Vpp: expect feo 3.4-6.4V no clip; nbi >= 4.0V (CM) ===="
+  meas tran vmax  MAX v(feo) from=3m to=8m
+  meas tran vmin  MIN v(feo) from=3m to=8m
+  meas tran cmmin MIN v(nbi) from=3m to=8m
+  meas tran cmmax MAX v(nbi) from=3m to=8m
+  echo "==== ADC side: vinl should be ~2.5V +/- 1.5V (3Vpp), inside 1.0-4.0V ===="
+  meas tran adcmax MAX v(vinl) from=3m to=8m
+  meas tran adcmin MIN v(vinl) from=3m to=8m
+
+  alter @Vin[sin] = [ 0 0.8 1k 0 0 ]
+  tran 5u 8m 2m
+  echo "==== TRAN overdrive 1.6Vpp in: x3=4.8Vpp. On 9V the TL072 does NOT ===="
+  echo "==== clip (that's the extra headroom vs the 5V design) - the ADC's  ===="
+  echo "==== 1.0-4.0V full-scale clips first; set the trim by ear/meter.    ===="
+  meas tran od_vmax MAX v(feo) from=3m to=8m
+  meas tran od_vmin MIN v(feo) from=3m to=8m
+  meas tran od_adcmax MAX v(vinl) from=3m to=8m
+  meas tran od_adcmin MIN v(vinl) from=3m to=8m
+.endc
+.end
