@@ -49,6 +49,32 @@ what rail the op-amp runs on. TL072 is pin-compatible with the MCP6002
 - The 9 V rail powers **only U1**. The PCM1808's VCC stays on the Pi's 5 V
   per [adc-hookup.md](adc-hookup.md) — do not put 9 V anywhere near the ADC.
 
+## Bench setup: CopperSound DIY breadboard (medium) + Gator 9 V PSU
+
+The whole front-end lives on the CopperSound board — it exists for exactly
+this kind of circuit:
+
+- **Gator 9 V →** the CopperSound board's **DC jack**. Both sides are
+  standard Boss-style center-negative, so polarity is handled by using
+  them as intended. Its power rails become the front-end's +9 V and GND
+  (check the board's own rail labels).
+- **Guitar →** the board's **input jack** → Cin 0.1 µF → Rbias 1 M →
+  TL072 buffer → ×3 gain stage → **Cout 1 µF → the board's output jack**.
+- **Output jack → PCM1808 side** with a regular instrument cable (or a
+  wire pair). Put **Rs 1 k + Ca 1 nF at the ADC end**, right at the VINL
+  pin — the anti-alias RC belongs at the pin it protects, not on the
+  pedal board.
+- **One explicit ground wire** from the CopperSound GND rail to the star
+  ground (Pi pin 6 rail). The cable's sleeve nominally carries ground
+  too, but the audio reference shouldn't hang off a patch cable.
+
+Two supply domains, one ground: Gator 9 V feeds only the TL072 board; the
+Pi's 5 V/3.3 V feed the PCM1808 per [adc-hookup.md](adc-hookup.md).
+
+This rig doubles as the pedal-development platform for the Pedal Workshop
+merge — same board, same PSU, pedals prototyped between the guitar and
+this front-end.
+
 ## Also in the drawer: CD4053BE
 
 Not needed for the M2 capture path — **park them for rev B**, where they're
