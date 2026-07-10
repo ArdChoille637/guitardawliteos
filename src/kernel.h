@@ -1,24 +1,28 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// GuitarDAWLiteOS — Milestone 0 bring-up kernel
+// GuitarDAWLiteOS — Milestone 3 kernel: multi-core audio engine
 //
-// First-boot payload for the Pi 5: proves the boot chain (firmware -> Circle
-// -> HDMI/UART) with an ACT-LED heartbeat (BCM2712 on-die GPIO), and keeps
-// the SoC cool during bench testing by driving the Active Cooler via
-// CCPUThrottle (cmdline: gpiofanpin=45 socmaxtemp=60 fast=true) with
-// continuous temperature telemetry on screen/serial. RP1 GPIO access
-// (Spike A) is proven by the fan itself: GPIO45 lives on RP1 bank 2, so a
-// switching fan == working RP1 GPIO path.
+// Evolves the Milestone 0 bring-up kernel (headless-safe boot, Active
+// Cooler thermal management, ACT-LED heartbeat — all retained) into the
+// audio engine skeleton from planning/build-plan.md Milestone 3:
 //
-// HEADLESS-SAFE BY DESIGN: on Pi 4/5, Circle's CScreenDevice::Initialize()
-// fails outright when no HDMI monitor is attached (documented in
-// doc/issues.txt — the firmware can't allocate a framebuffer without a
-// negotiated display mode). We do NOT gate boot on screen or serial
-// succeeding: both are attempted, but if neither is present the logger
-// falls back to CNullDevice so Initialize() still succeeds and Run() (the
-// fan/thermal loop + LED heartbeat) always executes regardless of what is
-// plugged in. With nothing attached, the ACT LED heartbeat and fan cycling
-// ARE the diagnostic.
+//   core 0: I2S full-duplex DMA callbacks (capture->monitor->playback
+//           mix in IRQ context) + thermal/heartbeat main loop
+//   core 1: analysis worker (level meter now, YIN pitch in M6)
+//   core 2: storage drain worker (FatFs SD writer lands here in M4)
+//   core 3: stats reporter (framebuffer UI lands here in M5)
+//
+// Capture audio fans out through a lock-free single-producer broadcast
+// ring (ringbuffer.h) with independent per-reader cursors.
+//
+// HEADLESS-SAFE BY DESIGN (unchanged from M0): screen and serial are
+// attempted but never gate boot; with neither attached the logger falls
+// back to CNullDevice and the ACT-LED heartbeat + fan ARE the diagnostic.
+//
+// BUILD REQUIREMENT: the whole Circle tree must be built with
+// -DARM_ALLOW_MULTI_CORE (scripts/build.sh enforces this) — the flag
+// changes CSpinLock layout and atomic strength, so an app-only define
+// would silently produce broken synchronization.
 //
 #ifndef _kernel_h
 #define _kernel_h
@@ -35,6 +39,9 @@
 #include <circle/logger.h>
 #include <circle/cputhrottle.h>
 #include <circle/types.h>
+
+#include "audioengine.h"
+#include "cores.h"
 
 enum TShutdownMode
 {
@@ -71,11 +78,14 @@ private:
 	CTimer			m_Timer;
 	CLogger			m_Logger;
 	CCPUThrottle		m_CPUThrottle;
+	CAudioEngine		m_AudioEngine;	// needs m_Interrupt: keep after it
+	CAppCores		m_Cores;	// initialized LAST (arms spinlocks)
 
 	// Set by Initialize(); TRUE only if that peripheral actually came up
 	// (screen needs a monitor attached; neither is ever fatal to boot).
 	boolean			m_bScreenOK;
 	boolean			m_bSerialOK;
+	boolean			m_bAudioOK;
 };
 
 #endif

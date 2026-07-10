@@ -1,11 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// GuitarDAWLiteOS — Milestone 0 bring-up kernel (see kernel.h)
+// GuitarDAWLiteOS — Milestone 3 kernel (see kernel.h)
 //
 #include "kernel.h"
 #include <circle/machineinfo.h>
 
 static const char FromKernel[] = "gdawlite";
+
+// The capture ring is 4 MiB — far too big for CKernel, which lives on
+// main()'s 128 KB kernel stack. File-scope BSS: zeroed at boot, no heap
+// churn, address fixed at link time.
+static TCaptureRing s_CaptureRing;
+static TAudioStats s_AudioStats;
 
 // Coarse SoC-temperature indicator via the ACT LED, so the reading is
 // visible with NO screen or serial cable attached (see the blink-burst
@@ -26,12 +32,14 @@ CKernel::CKernel (void)
 	m_Timer (&m_Interrupt),
 	m_Logger (m_Options.GetLogLevel (), &m_Timer),
 	// m_CPUThrottle: default resolves via cmdline — CPUSpeedLow unless
-	// "fast=true" (we set fast=true so the bench generates real heat and
-	// the fan trip is actually exercised; in fan mode the clock is never
-	// changed afterwards). With gpiofanpin= set it manages the Active
-	// Cooler fan instead of throttling the clock.
+	// "fast=true" (we set fast=true: the audio path wants the full clock
+	// and the Active Cooler handles the heat). With gpiofanpin= set it
+	// manages the Active Cooler fan instead of throttling the clock.
+	m_AudioEngine (&m_Interrupt, &s_CaptureRing, &s_AudioStats),
+	m_Cores (CMemorySystem::Get (), &s_CaptureRing, &s_AudioStats),
 	m_bScreenOK (FALSE),
-	m_bSerialOK (FALSE)
+	m_bSerialOK (FALSE),
+	m_bAudioOK (FALSE)
 {
 	m_ActLED.Blink (5);	// show we are alive (also proves LED GPIO path)
 }
@@ -84,12 +92,21 @@ boolean CKernel::Initialize (void)
 		return FALSE;
 	}
 
+	// LAST, per Circle doc/multicore.txt: launches cores 1-3 and arms
+	// CSpinLock (all spinlocks are no-ops until this runs). The workers
+	// hold on an atomic start flag until Run() releases them, so nothing
+	// races the audio device bring-up below.
+	if (!m_Cores.Initialize ())
+	{
+		return FALSE;
+	}
+
 	return TRUE;
 }
 
 TShutdownMode CKernel::Run (void)
 {
-	m_Logger.Write (FromKernel, LogNotice, "GuitarDAWLiteOS bring-up kernel");
+	m_Logger.Write (FromKernel, LogNotice, "GuitarDAWLiteOS M3 audio engine");
 	m_Logger.Write (FromKernel, LogNotice, "Compile time: " __DATE__ " " __TIME__);
 	m_Logger.Write (FromKernel, LogNotice, "Machine: %s",
 			CMachineInfo::Get ()->GetMachineName ());
@@ -100,7 +117,28 @@ TShutdownMode CKernel::Run (void)
 				? m_Options.GetLogDevice ()
 				: (m_bScreenOK ? "screen" : (m_bSerialOK ? "serial" : "null - nothing visible!")));
 
-	// ── Thermal management ───────────────────────────────────────────────
+	// ── Audio engine ─────────────────────────────────────────────────────
+	// Full-duplex I2S0: BCLK/LRCLK out (master), PCM1808 in on GPIO20,
+	// PCM5102A out on GPIO21. MCLK comes from the external Nano ESP32
+	// (Spike B) — nothing to do here for it. Audio failing does NOT gate
+	// the thermal loop: on the bench with no codecs wired, capture reads
+	// whatever floats on GPIO20 and playback drives GPIO21 — harmless,
+	// and the stats prove the engine plumbing either way.
+	m_bAudioOK = m_AudioEngine.Start ();
+	m_Logger.Write (FromKernel, m_bAudioOK ? LogNotice : LogError,
+			"I2S full duplex (TXRX): %s  (48 kHz, %u frames/chunk, "
+			"ring %u KB, monitor FIFO %u frames)",
+			m_bAudioOK ? "RUNNING" : "FAILED to start",
+			GDAW_CHUNK_WORDS / 2,
+			(unsigned) (TCaptureRing::CAPACITY * sizeof (u32) / 1024),
+			GDAW_MONITOR_FIFO_CHUNKS * GDAW_CHUNK_WORDS / 2);
+
+	// Release the worker cores (they've been spinning on the start flag
+	// since m_Cores.Initialize()). Workers tolerate a dead audio engine —
+	// they just see an empty ring.
+	m_Cores.StartWorkers ();
+
+	// ── Thermal management (unchanged from M0) ───────────────────────────
 	// cmdline.txt must carry: gpiofanpin=45 socmaxtemp=60
 	// With gpiofanpin set, CCPUThrottle switches the Active Cooler fan on
 	// at socmaxtemp (hysteresis: off again 5 C below). The fan is driven ON
@@ -141,7 +179,9 @@ TShutdownMode CKernel::Run (void)
 			"pause, N quick blinks = temp band, then another 1s pause: "
 			"1=<40C 2=40s 3=50s 4=60s 5=70s 6=80C+");
 
-	// ── Main loop: heartbeat + thermal telemetry ─────────────────────────
+	// ── Core 0 main loop: heartbeat + thermal telemetry ──────────────────
+	// The audio path lives entirely in IRQ context and preempts this loop
+	// at will; everything here is slow-path housekeeping.
 	unsigned nLoop = 0;
 	while (1)
 	{

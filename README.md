@@ -10,7 +10,8 @@ Bare-metal **Raspberry Pi 5** loop recorder / guitarist workbench. I²S audio (P
 - ✅ **Milestone 0 build chain working.** `aarch64-elf-gcc 16.1.0` → Circle (`develop@22722a76`, `RASPPI=5`) → `kernel_2712.img` built & linked. One command: `scripts/build.sh`. → [docs/build-setup.md](docs/build-setup.md)
 - 🔌 **Boot partition staged** in [`sdcard/`](sdcard/) (config + kernel + both Pi 5 DTBs + overlay, all validated). **Your move:** format a microSD FAT32, copy `sdcard/` contents, boot with HDMI → expect Circle log text.
 - ✅ **Spike B done.** The planned internal `clk_i2s→GPCLK0` MCLK route doesn't work — `clk_i2s` is already claimed by BCLK the whole time I²S runs. **Resolved with an external generator:** an Arduino Nano ESP32 now generates MCLK, wired straight to the PCM1808. Flashed and bench-verified (no scope needed — the chip's own PCNT peripheral measured it): **12.2880 MHz**, exact match to target. → [docs/claim-verification.md](docs/claim-verification.md), [esp32-mclk/](esp32-mclk/)
-- ⏭️ **Next:** wire the Nano ESP32 to the PCM1808 once Milestone 2 hardware is on the bench, then first Pi 5 boot.
+- 🧩 **Milestone 3 code written** (2026-07-09): full-duplex I²S monitor path (1.0 ms worst-case in→out), lock-free SPMC broadcast ring (seqlock reserve/commit — host stress tests caught and killed a real torn-read bug; passes plain + ThreadSanitizer), 4-core split per the plan, M0 thermal/headless behavior retained. Cross-compiles to `kernel_2712.img` (146 KB), staged in [`sdcard/`](sdcard/). **Hardware gate pending** — needs the first Pi 5 boot + codecs. → [src/](src/), [tests/](tests/)
+- ⏭️ **Next:** first Pi 5 boot (flash `sdcard/`), then Milestone 2 wiring (codecs + Nano ESP32 MCLK) → the M3 gate run.
 
 ## The 6 things verification changed (read before building)
 1. **No `≤128` DMA chunk cap** — it's a constructor arg, default **8192**. Ring-buffer/SD batching gets *easier*. The doc was wrong.
