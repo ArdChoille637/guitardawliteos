@@ -6,9 +6,11 @@
 // see docs/claim-verification.md ("Update 2026-07-09") for why the Pi 5
 // can't generate this itself while its I2S peripheral is running BCLK.
 //
-// Only MCLK is used. BCLK/WS/DATA stay unconnected -- the Pi 5's I2S0
-// generates those on GPIO18/19/20/21 as before; this board's job is to
-// hold GPIO5 (Nano ESP32 pin "D2") at a clean 256*48kHz tone.
+// Only MCLK is used. BCLK/WS/DATA stay unconnected -- since the
+// 2026-07-10 clock pivot the PCM1808 divides this MCLK into BCLK/LRCLK
+// (ADC straps as bus master, Pi 5 runs I2S slave on GPIO18/19/20/21);
+// this board's job is to hold GPIO5 (Nano ESP32 pin "D2") at a clean
+// 256*48kHz tone.
 //
 // SELF-TEST: no scope on hand, so frequency is verified in hardware using
 // the chip's own PCNT (pulse counter) peripheral instead of a logic

@@ -40,15 +40,15 @@ Bare-metal **Raspberry Pi 5** loop recorder / guitarist workbench. I²S audio (P
 - **[planning/build-plan.md](planning/build-plan.md)** — milestones 0–6, tasks with effort, risk register, pinned dependencies.
 - **[docs/claim-verification.md](docs/claim-verification.md)** — full verdict table + 6 consequential corrections with sources.
 - **[docs/hardware-review.md](docs/hardware-review.md)** — datasheet-verified BOM, power tree, connection/netlist table, **guitar front-end design**, grounding, risk register.
-- **[docs/schematic.md](docs/schematic.md)** — buildable schematic: refdes BOM, net-by-net netlist, **SPICE-verified** front-end, build order, ERC self-check. Sheets: [front-end](docs/frontend-schematic.svg) · [codec & power](docs/codec-power-schematic.svg). Sim: [sim/](docs/sim/).
-- **[docs/wiring-diagram.svg](docs/wiring-diagram.svg)** — block-level wiring overview (Pi 5 ↔ PCM1808 ↔ PCM5102A, clocks/data/power).
+- **[docs/schematic.md](docs/schematic.md)** — buildable schematic: refdes BOM, net-by-net netlist, **SPICE-verified** front-end, build order, ERC self-check (netlist = rev-A Pi-as-master; see its pivot banner). Sheets: [front-end 5 V](docs/frontend-schematic.svg) · [front-end 9 V TL072 (as-built)](docs/tl072-frontend-schematic.svg) · [codec & clocks (as-built)](docs/codec-power-schematic.svg). Sim: [sim/](docs/sim/).
+- **[docs/wiring-diagram.svg](docs/wiring-diagram.svg)** — as-built bench wiring overview (Nano MCLK → PCM1808 **bus master** → Pi 5 slave + PCM5102A; clocks/data/power domains).
 - **[kicad/](kicad/)** — openable **KiCad project** (`guitardawliteos.kicad_pro`, KiCad-10-verified) + generated netlist/symbols/BOM from `gen.py` (ERC-checked). See [kicad/README.md](kicad/README.md).
 - **[docs/pcb-learning-path.md](docs/pcb-learning-path.md)** — **follow-along PCB-design curriculum + open-hardware roadmap** (M1 board-from-netlist → M4 Pi 5 HAT → M6 rev-B HAT+ → M7 faceplate → M8 retro deck → M9 CM5 carrier), hackability + licensing.
 - **[docs/parts-order.md](docs/parts-order.md)** — **DigiKey prototyping order** (verified live 2026-07-01): breadboard + codecs + front-end + tape Level A + Touch Display 2, with MPNs, quantities, substitutions for dead parts, and the not-DigiKey list.
 - **[docs/retro-deck-design.md](docs/retro-deck-design.md)** — **Phase-2 architecture (verified)**: Touch Display 2 via Circle `addon/rp1dsi` (zero GPIO), cassette tape loop as analog insert (Level A ships in rev B, VINR return + REM punch-in), three-layer retro mechanicals (HAT+ core / faceplate PCB / metal+wood chassis), rev-B GPIO budget.
 - **[docs/breadboard-build.md](docs/breadboard-build.md)** + [breadboard-layout.svg](docs/breadboard-layout.svg) — solderless build with the GY modules + a DIP op-amp; placement + step-by-step + gotcha checklist.
 - **[docs/adc-hookup.md](docs/adc-hookup.md)** — **bench card: every wire for Pi 5 + PCM1808 + Nano ESP32 capture hookup** (power, ground, straps, clocks, data, order of operations).
-- **[docs/tl072-frontend.md](docs/tl072-frontend.md)** — **drawer-parts front-end variant: TL072 on 9 V** (SPICE-verified; two changes from the canonical schematic) + CD4053BE rev-B notes.
+- **[docs/tl072-frontend.md](docs/tl072-frontend.md)** — **drawer-parts front-end variant: TL072 on 9 V** (SPICE-verified; two changes from the canonical schematic) + CD4053BE rev-B notes. Schematic sheet: [tl072-frontend-schematic.svg](docs/tl072-frontend-schematic.svg).
 - **[docs/build-setup.md](docs/build-setup.md)** — toolchain, build, SD flash, UART.
 - Original Phase-1 research reference: project `CLAUDE.md` (the GuitarDAWLiteOS research doc).
 

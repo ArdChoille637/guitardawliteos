@@ -24,9 +24,10 @@ MCLK-only clock source:
   code now just uses the driver's sane default rather than requesting a
   clock source that doesn't exist on this chip.
 - BCLK/WS/DATA GPIOs are all `I2S_GPIO_UNUSED` — only the MCLK pin is driven.
-  The Pi 5's own I2S0 still generates BCLK/LRCLK/DATA on GPIO18/19/20/21 as
-  documented in the main [build-plan.md](../planning/build-plan.md); this
-  board never touches those signals.
+  Since the 2026-07-10 clock pivot the **PCM1808 divides this MCLK into
+  BCLK/LRCLK** (it straps as bus master) and the Pi 5 runs I²S *slave* on
+  GPIO18/19/20/21 — see [docs/adc-hookup.md](../docs/adc-hookup.md); this
+  board never touches those signals either way.
 - A built-in **self-test**: the ESP32-S3's PCNT (pulse counter) peripheral
   counts edges on D3 (GPIO6) and prints the measured frequency once a
   second — see below.
@@ -89,9 +90,10 @@ esptool --chip esp32s3 --port "$PORT" --before default-reset --after hard-reset 
 | D2 (GPIO5) | MCLK 12.288 MHz | PCM1808 **SCKI (pin 6)** only |
 | GND | common ground | tie to the Pi 5 / breadboard ground |
 
-Power the Nano ESP32 however's convenient (its own USB, or 5V from the
-breadboard rail) — it's electrically independent of the Pi 5 audio board
-except for the MCLK line and a shared ground.
+Power the Nano ESP32 from **its own USB-C** — do **not** feed the 5 V
+breadboard rail into VIN (the Nano ESP32's VIN regulator wants 6–21 V;
+5 V there is out of spec). It's electrically independent of the Pi 5
+audio board except for the MCLK line and a shared ground.
 
 ## Why not the Pi 5 / a Pico / a Si5351
 

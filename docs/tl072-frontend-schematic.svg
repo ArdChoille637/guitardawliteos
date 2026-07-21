@@ -1,0 +1,89 @@
+<svg width="100%" viewBox="0 0 680 560" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>GuitarDAWLiteOS TL072 front-end schematic (single 9 V, CopperSound bench build)</title>
+<desc>Single 9V guitar front-end: CopperSound input jack, 0.1uF coupling, 1M bias to a 4.9V mid-rail, TL072 buffer, x3 gain stage with trim, 1uF output coupling to the output jack; 1k+1nF anti-alias lands at the ADC LIN pad. SPICE-verified.</desc>
+<style>
+text{font-family:-apple-system,Helvetica,Arial,sans-serif;fill:#2C2C2A}
+.lbl{font-size:12px;fill:#5F5E5A}
+.rd{font-size:12px;font-weight:500;fill:#2C2C2A}
+.acc{font-size:12px;font-weight:500;fill:#534AB7}
+.w,.cmp{stroke:#2C2C2A;stroke-width:1.4;fill:none}
+.dot{fill:#2C2C2A}
+</style>
+<rect x="0" y="0" width="680" height="560" fill="#FFFFFF"/>
+
+<rect class="cmp" x="40" y="135" width="30" height="30" rx="2"/>
+<text class="rd" x="34" y="128">J-IN</text>
+<text class="lbl" x="20" y="207">guitar 1/4 in</text>
+<text class="lbl" x="20" y="221">(CopperSound jack)</text>
+<line class="w" x1="55" y1="165" x2="55" y2="186"/>
+<line class="w" x1="48" y1="186" x2="62" y2="186"/><line class="w" x1="51" y1="189" x2="59" y2="189"/><line class="w" x1="53.5" y1="192" x2="56.5" y2="192"/>
+<line class="w" x1="70" y1="150" x2="92" y2="150"/>
+
+<line class="w" x1="96" y1="142" x2="96" y2="158"/><line class="w" x1="102" y1="142" x2="102" y2="158"/>
+<line class="w" x1="92" y1="150" x2="96" y2="150"/><line class="w" x1="102" y1="150" x2="124" y2="150"/>
+<text class="lbl" x="72" y="136">Cin 0.1uF</text>
+
+<circle class="dot" cx="124" cy="150" r="2.5"/>
+<line class="w" x1="124" y1="150" x2="124" y2="112"/><rect class="cmp" x="119" y="88" width="10" height="24"/><line class="w" x1="124" y1="88" x2="124" y2="74"/>
+<text class="acc" x="110" y="70">VBIAS</text><text class="lbl" x="132" y="104">Rbias 1M</text>
+<line class="w" x1="124" y1="150" x2="146" y2="150"/><line class="w" x1="146" y1="150" x2="146" y2="142"/><line class="w" x1="146" y1="142" x2="150" y2="142"/>
+
+<path class="cmp" d="M150 130 L150 170 L196 150 Z"/>
+<text class="lbl" x="153" y="146">+</text><text class="lbl" x="153" y="162">-</text><text class="rd" x="156" y="154">U1A</text>
+<line class="w" x1="196" y1="150" x2="230" y2="150"/>
+<circle class="dot" cx="210" cy="150" r="2.5"/>
+<line class="w" x1="210" y1="150" x2="210" y2="178"/><line class="w" x1="210" y1="178" x2="146" y2="178"/><line class="w" x1="146" y1="178" x2="146" y2="158"/><line class="w" x1="146" y1="158" x2="150" y2="158"/>
+
+<line class="w" x1="230" y1="150" x2="230" y2="142"/><line class="w" x1="230" y1="142" x2="244" y2="142"/>
+<path class="cmp" d="M244 130 L244 170 L290 150 Z"/>
+<text class="lbl" x="247" y="146">+</text><text class="lbl" x="247" y="162">-</text><text class="rd" x="250" y="154">U1B</text>
+<line class="w" x1="290" y1="150" x2="320" y2="150"/>
+<line class="w" x1="244" y1="158" x2="230" y2="158"/><line class="w" x1="230" y1="158" x2="230" y2="210"/>
+<circle class="dot" cx="230" cy="210" r="2.5"/>
+<line class="w" x1="230" y1="210" x2="230" y2="216"/><rect class="cmp" x="225" y="216" width="10" height="24"/><line class="w" x1="230" y1="240" x2="230" y2="258"/>
+<text class="acc" x="212" y="270">VBIAS</text><text class="lbl" x="238" y="232">Rg 10k</text>
+<line class="w" x1="230" y1="210" x2="252" y2="210"/><rect class="cmp" x="252" y="205" width="26" height="10"/><line class="w" x1="278" y1="210" x2="305" y2="210"/><line class="w" x1="305" y1="210" x2="305" y2="150"/><circle class="dot" cx="305" cy="150" r="2.5"/>
+<text class="lbl" x="312" y="214">Rf 10k + trim</text>
+
+<line class="w" x1="320" y1="150" x2="334" y2="150"/>
+<line class="w" x1="338" y1="142" x2="338" y2="158"/><line class="w" x1="344" y1="142" x2="344" y2="158"/>
+<line class="w" x1="334" y1="150" x2="338" y2="150"/><line class="w" x1="344" y1="150" x2="366" y2="150"/>
+<text class="lbl" x="306" y="138">Cout 1uF</text>
+
+<rect class="cmp" x="366" y="135" width="30" height="30" rx="2"/>
+<text class="rd" x="352" y="124">J-OUT (output jack)</text>
+<line class="w" x1="381" y1="165" x2="381" y2="186"/>
+<line class="w" x1="374" y1="186" x2="388" y2="186"/><line class="w" x1="377" y1="189" x2="385" y2="189"/><line class="w" x1="379.5" y1="192" x2="382.5" y2="192"/>
+
+<line class="w" x1="396" y1="150" x2="438" y2="150" stroke-dasharray="6 4"/>
+<text class="lbl" x="392" y="170">cable</text>
+
+<line class="w" x1="438" y1="150" x2="448" y2="150"/><rect class="cmp" x="448" y="145" width="26" height="10"/><line class="w" x1="474" y1="150" x2="500" y2="150"/>
+<text class="lbl" x="448" y="172">Rs 1k</text>
+<circle class="dot" cx="500" cy="150" r="2.5"/>
+<line class="w" x1="500" y1="150" x2="500" y2="184"/><line class="w" x1="488" y1="184" x2="512" y2="184"/><line class="w" x1="488" y1="190" x2="512" y2="190"/><line class="w" x1="500" y1="190" x2="500" y2="198"/>
+<line class="w" x1="493" y1="198" x2="507" y2="198"/><line class="w" x1="496" y1="201" x2="504" y2="201"/><line class="w" x1="498.5" y1="204" x2="501.5" y2="204"/>
+<text class="lbl" x="516" y="190">Ca 1nF</text>
+<line class="w" x1="500" y1="150" x2="540" y2="150"/><text class="acc" x="544" y="146">ADC LIN pad</text>
+<text class="lbl" x="452" y="234">Rs + Ca sit AT the ADC pad,</text>
+<text class="lbl" x="452" y="248">not on the pedal board</text>
+
+<line class="w" x1="80" y1="250" x2="100" y2="250"/><line class="w" x1="90" y1="250" x2="90" y2="264"/><text class="acc" x="60" y="246">+9V</text>
+<rect class="cmp" x="85" y="264" width="10" height="24"/><line class="w" x1="90" y1="288" x2="90" y2="306"/><text class="lbl" x="98" y="280">R1 10k</text>
+<circle class="dot" cx="90" cy="306" r="2.5"/><text class="acc" x="100" y="303">VBIAS 4.9V</text>
+<line class="w" x1="90" y1="306" x2="158" y2="306"/><line class="w" x1="158" y1="306" x2="158" y2="318"/><line class="w" x1="146" y1="318" x2="170" y2="318"/><line class="w" x1="146" y1="324" x2="170" y2="324"/><line class="w" x1="158" y1="324" x2="158" y2="332"/>
+<line class="w" x1="151" y1="332" x2="165" y2="332"/><line class="w" x1="154" y1="335" x2="162" y2="335"/><line class="w" x1="156.5" y1="338" x2="159.5" y2="338"/>
+<text class="lbl" x="176" y="316">C1 10uF</text>
+<line class="w" x1="90" y1="306" x2="90" y2="318"/><rect class="cmp" x="85" y="318" width="10" height="24"/><line class="w" x1="90" y1="342" x2="90" y2="358"/><text class="lbl" x="98" y="334">R2 12k</text>
+<line class="w" x1="83" y1="358" x2="97" y2="358"/><line class="w" x1="86" y1="361" x2="94" y2="361"/><line class="w" x1="88.5" y1="364" x2="91.5" y2="364"/>
+
+<text class="rd" x="40" y="400">Notes — 9 V TL072 variant (vs the 5 V canonical sheet)</text>
+<text class="lbl" x="40" y="418">U1 = TL072 (pin-compatible w/ MCP6002; DIP-8).  V+ pin 8 = +9 V from the Gator PSU</text>
+<text class="lbl" x="40" y="434">via the CopperSound DC jack;  V− pin 4 = GND.</text>
+<text class="lbl" x="40" y="456">VBIAS = 4.9 V (R1 10k / R2 12k from 9 V) — keeps the JFET inputs ≥ 4 V from ground</text>
+<text class="lbl" x="40" y="472">(TL072 phase-reversal guard).</text>
+<text class="lbl" x="40" y="494">Cout isolates the 9 V domain: the PCM1808 self-biases its input after the cap —</text>
+<text class="lbl" x="40" y="510">the ADC never sees the 9 V rail.</text>
+<text class="lbl" x="40" y="532">SPICE-verified (ngspice-46): DC 4.909 V · ×3.00 gain, flat 100 Hz–20 kHz · −3 dB @ 2.7 Hz</text>
+<text class="lbl" x="40" y="548">· hot humbucker 1 Vpp → 1.02–3.97 V at the ADC pin, no clip.</text>
+</svg>

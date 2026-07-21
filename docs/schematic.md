@@ -2,9 +2,12 @@
 
 **Date:** 2026-06-29. Buildable schematic for the Pi 5 + PCM1808 (capture, with guitar front-end) + PCM5102A (playback) board. All pins/values are datasheet-verified; the analog front-end is **SPICE-verified** (ngspice, deck in [sim/frontend.cir](sim/frontend.cir), results in [sim/frontend-results.txt](sim/frontend-results.txt)).
 
+> ⚠️ **Clock pivot (2026-07-10):** the netlist below is the **rev-A, Pi-as-master** design and predates the pivot. The as-built bench runs the **PCM1808 as I²S bus master** (MD0=MD1=HIGH, 256 fs) with the **Pi 5 as slave** — straps, BCK/LRCK directions, and the Pi's I²S instance in this doc are stale until rev B is redrawn. Wire from **[adc-hookup.md](adc-hookup.md)**, [wiring-diagram.svg](wiring-diagram.svg), and the as-built sheets below instead.
+
 **Sheets**
-- **Front-end** — [frontend-schematic.svg](frontend-schematic.svg): guitar ¼″ → buffer → ×3 gain → AA → VINL, with the VBIAS mid-rail.
-- **Codec & power** — [codec-power-schematic.svg](codec-power-schematic.svg): Pi 5 J8 ↔ PCM1808 ↔ PCM5102A, decoupling, strapping (nets joined by name).
+- **Front-end (canonical 5 V)** — [frontend-schematic.svg](frontend-schematic.svg): guitar ¼″ → buffer → ×3 gain → AA → VINL, with the VBIAS mid-rail.
+- **Front-end (as-built bench, 9 V TL072)** — [tl072-frontend-schematic.svg](tl072-frontend-schematic.svg): drawer-parts variant per [tl072-frontend.md](tl072-frontend.md).
+- **Codec & clocks (as-built bench)** — [codec-power-schematic.svg](codec-power-schematic.svg): **redrawn 2026-07-21 to the post-pivot topology** — Nano ESP32 MCLK → CJMCU-1808 master → Pi 5 slave + GY-PCM5102, per-pin with drive directions.
 - Supersedes nothing; complements [hardware-review.md](hardware-review.md) (rationale) and [wiring-diagram.svg](wiring-diagram.svg) (overview).
 
 ---
