@@ -64,15 +64,44 @@ the pads:
 | TL072 front-end | Gator 9 V → CopperSound DC jack (separate domain, shared ground) |
 
 Star ground = Pi J8 **pin 6**: module GND, Nano GND, CopperSound GND rail,
-input **–** pad — one rail, no islands.
+input **–** pad — one **DC** point, no DC ground loops.
+
+> **⚠ Analog-5V filter was dropped from this card — restore it (M2 review A1).** The
+> PCM1808's full-scale is *ratiometric* (FS = 0.6·VCC, VREF = 0.5·VCC), so ripple on
+> the +5 V pin multiplies onto every sample (Science: 50 mVpp/5 V ≈ −52 dBc sidebands;
+> the chip's own floor is ~12 µVrms, so even faint in-band rail coupling can exceed it).
+> The original power tree specified a **ferrite + 10 µF + 0.1 µF** at the VCC pin; it
+> never made it onto the as-built sheets. **Before adding parts, measure:** record
+> silence and FFT it — if the Pi rail is already quiet in-band, you're done. If not, a
+> **ferrite alone is ≈0 dB in-band** (Science) — use an **RC (≈10 Ω + 470 µF ∥ 0.1 µF)**
+> on the +5 V pin (≈90 mV drop at ~9 mA, still ≥ 4.5 V VCC min).
+
+> **HF clock returns (M2 review A3) — a DC star is right for audio, wrong for MHz clocks.**
+> "One point" is a *DC* rule. The 12.288 MHz MCLK (Nano D2→SCK) and the 3.072 MHz
+> BCK/LRC/OUT wires want their return current running *beside* them, which the lone star
+> spoke doesn't provide. Best practice, and it does **not** break the DC star: run a
+> **dedicated ground wire paired/twisted with the MCLK line** (Nano→ADC) and another with
+> the BCK/LRC/OUT bundle, each still landing at pin 6 — a paired HF return is *not* a
+> forbidden "ground island." Add **~33 Ω series at the Nano D2 pin** (tames edge ringing
+> and doubles as the fault-current limit if a ground jumper drops — review B2). Give the
+> **Nano two ground wires** so a single dropped jumper never routes clock return through
+> the SCK clamp. *(Science: the audio-band residue of this bounce is small — MHz energy
+> folds out of band — so these are robustness/EMI hygiene, not a measured-noise fix.)*
 
 ## Order of operations
 
 1. Wire everything **unpowered**. Straps: FMT→GND, **MD0 and MD1→3.3 V rail**
    (TI requires mode pins set before power-on). Double-check no 5 V touches
-   a 3.3 pin.
+   a 3.3 pin — **and verify it**: with the module's two power leads *not yet
+   landed*, power the Pi and meter the two rail rows (expect 5.0 V and 3.3 V),
+   then power down and connect the module. J8 pins 1 (3.3 V) and 2 (5 V) are
+   physically adjacent, so a one-row slip puts 5 V on the 4 V-abs-max VDD pin.
 2. **Remove the D2→D3 self-test jumper** on the Nano ESP32.
-3. Power the Nano first (D2 carries 12.288 MHz), then the Pi.
+3. Power the Nano first (D2 carries 12.288 MHz), then the Pi, then the Gator
+   9 V. **Power down in reverse** (Gator, Pi, Nano). *(Nano-first is verified
+   safe — review B1: the PCM1808's SCK/MD/FMT inputs are rated −0.3…+6.5 V
+   independent of VDD, so 3.3 V into an unpowered ADC injects no fault current.)*
+   Before touching any wire later, **kill all three supplies first.**
 4. Boot log: `I2S full duplex (TXRX, slave - ADC masters the bus): RUNNING`.
    **`cap`/`play` only start counting once the ADC is wired, powered, and
    clocked** — a bare-board boot correctly shows 0s now (unlike the old
@@ -80,6 +109,10 @@ input **–** pad — one rail, no islands.
 5. Feed LIN a signal → `peak %` comes alive. `starve`/`drop`/`laps` stay 0.
 
 ## Debug ladder (capture dead?)
+
+> **Power down all three supplies before reseating any wire or strap.** This ladder
+> sends your hands to live rows; a strap jumper slipping from the 3.3 V row into the
+> adjacent 5 V row is the exact way the ADC's 4 V-abs-max VDD pin dies.
 
 1. `cap` frozen at 0 → no bus clocks: check SCKI wire (Nano D2), Nano power,
    then MD0/MD1 straps (both must be HIGH or the ADC never masters the bus).

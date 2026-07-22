@@ -101,3 +101,31 @@ committing rev-B silicon.
 
 *Findings raised by Fable-5 finder agents; two verified 3/3 by independent refuters; the rest unverified due
 to the token-limit cutoff. Nothing here blocks first-light.*
+
+---
+
+## Update 2026-07-22 — Claude Science verdicts + Claude Code cross-check
+
+The physics questions (A1–A4, B1–B3) went to Claude Science; the reply is logged in
+`shared-with-claude-team/SHARED_MEMORY.md`. Claude Code independently reproduced the load-bearing ones
+(house rule: Science's numbers are Indicative until reproduced). Net result — **first light is unaffected;
+one confirmed noise fix, one refuted rev-B cost, and one correction *to* Science.**
+
+| # | Science verdict | Code cross-check | Action taken |
+|---|---|---|---|
+| **A1** ratiometric rail coupling | **Confirmed real** (−52 dBc/50 mVpp; ferrite alone ≈0 dB in-band; RC needed) — but measure first | Arithmetic reproduced (FS RMS 1.06 V → −99 dBFS = 11.9 µVrms ✓) | `adc-hookup.md`: restore filter as an **RC (10 Ω + 470 µF ∥ 0.1 µF)**, gated on a silence-FFT A/B |
+| **A2** fractional-N MCLK jitter | **Refuted as SNR threat** — deterministic 6.25 ns sawtooth, sidebands at ±256 kHz fold to −134 dBFS in-band, 35 dB under the floor | Reasoning sound (periodic ⇒ discrete out-of-band lines, not a broadband floor; 256 kHz vs 48 kHz gcd = 16 kHz matches the fold claim). Accepted `Indicative` pending the borrowed-crystal falsifier | **No rev-B oscillator for SNR.** PLL_160M stands. `claim-verification.md` jitter note upheld |
+| **A3** HF ground bounce | Bounce real but folds out of band; in-band residue negligible | Plausible; consistent with 12.288 MHz = 256·fs | `adc-hookup.md`: paired HF return + 33 Ω at D2 as **EMI hygiene**, docs stop calling paired returns "islands" |
+| **A4** TL072 rail rejection | **Downgraded** to "common-mode ×1, ~−87 dBFS" | ❌ **CORRECTED.** ngspice PSRR of the actual deck: rail→ADC = **−31.7 dB (×3) / −16.9 dB (max trim)** — VBIAS ripple is *inverting-amplified* by Rf/Rg, because Cin shunts the + input to the low-Z guitar at 120 Hz. Science's ×1 holds only for an **open** input. The **finder's −66 dBFS was right.** | `tl072-frontend.md`: add **100 µF ∥ 0.1 µF at U1 pin 8** (more warranted than the downgrade implied); gate battery **≥ 8.3 V** |
+| **B1** SCKI abs-max | Refuted — SLES177B §6.1 = −0.3…+6.5 V, VDD-independent; Nano-first safe | Datasheet not on disk → **relayed, `Indicative` to Code**; conclusion is "no change," low risk | `adc-hookup.md`: note Nano-first is verified safe |
+| **B2** ground-open injection | Benign (Y-cap 0.5 mA ≪ ±10 mA clamp) | Relayed; the two-ground-wire mitigation is free | folded into the A3 note (two Nano grounds) |
+| **B3** TL072 into unpowered ADC | Within spec (7.5 mA vs ±10 mA, 25 % margin) | Relayed | recommend **Rs 1 k → 1.5 k** (2× margin, corner 159→106 kHz, no audio penalty) — optional |
+
+**The one that matters:** the cross-check caught Science's A4 downgrade — the ×1 common-mode assumption is
+wrong for a plugged-in guitar (ngspice: the hum is 21 dB worse at max trim than Science estimated, matching
+the original finder). This is the Code⇄Science pairing working as intended in both directions. Handed back to
+Science as a note; the fix (bypass cap) was already the right call and is now better justified.
+
+**Still open (→ Michael):** A1's real magnitude needs a **silence-FFT of the Pi 5 V rail** (the one thing
+no-scope analysis can't close); if a **12.288 MHz canned oscillator** can be borrowed, an A/B against it is
+the clean falsifier for both A2 and A3.

@@ -29,6 +29,28 @@ self-biases its input after the cap, so the ADC side doesn't know or care
 what rail the op-amp runs on. TL072 is pin-compatible with the MCP6002
 (standard dual op-amp DIP-8), so the breadboard layout is unchanged too.
 
+## Add a supply bypass cap (M2 review, 2026-07-22)
+
+**`C_byp` = 100 µF electrolytic ∥ 0.1 µF ceramic at U1 pin 8 → GND.** The as-built
+docs had *no* supply bypass, and the SPICE deck modeled the Gator as an ideal 9 V
+source, so rail ripple was never analyzed. It matters more than it looks, because
+**VBIAS ripple is not common-mode here** — at 120 Hz Cin (0.1 µF ≈ 13 kΩ) shunts the
+gain stage's + input toward the low-impedance guitar, so ripple on VBIAS gets
+*inverting-amplified* by Rf/Rg, not cancelled.
+
+Cross-checked in ngspice (rail → ADC-pin transfer, ideal low-Z source = plugged-in guitar):
+
+| Trim | rail → ADC transfer | 10 mVpp rail ripple → |
+|---|---|---|
+| default ×3 (Rf = 20 k) | **−31.7 dB** | ~−81 dBFS (inaudible) |
+| max trim ×12 (Rf = 110 k) | **−16.9 dB** | ~−66 dBFS (audible hum) |
+
+So the hum only bites when you crank the trim for a weak pickup — but that's a real
+operating point. `C_byp` at the op-amp pin cuts the switching-residual path outright
+and is standard practice for an op-amp on the end of a wall-wart cable; add it.
+*(This corrects the review's own "common-mode ×1" downgrade — the ×1 assumption only
+holds for an open input; a plugged-in guitar sees the Rf/Rg path.)*
+
 ## SPICE results (ngspice-46, 2026-07-10)
 
 | Check | Result | Pass bar |
@@ -42,8 +64,13 @@ what rail the op-amp runs on. TL072 is pin-compatible with the MCP6002
 
 ## Bench notes
 
-- **Power:** 9 V battery or pedal PSU. ⚠️ Boss-style pedal supplies are
-  **center-negative** — check polarity before it checks you.
+- **Power:** 9 V pedal PSU (preferred) or battery. ⚠️ Boss-style pedal supplies are
+  **center-negative** — check polarity before it checks you. ⚠️ **Keep the rail ≥ 8.3 V.**
+  VBIAS = 0.545·V_rail, so below ~8.3 V a 1 Vpp hot-humbucker drives the JFET input
+  under its guaranteed common-mode floor (V− + 4 V) → progressive distortion first,
+  and the notorious TL07x output latch-up only at a much lower rail. A fresh 9 V is
+  fine; a half-dead battery drifts into the distortion zone — prefer the PSU, or
+  swap the battery early.
 - **Ground:** the 9 V negative terminal joins the same star ground as
   everything else (Pi pin 6 rail). Two supply domains, one ground.
 - The 9 V rail powers **only U1**. The PCM1808's VCC stays on the Pi's 5 V
