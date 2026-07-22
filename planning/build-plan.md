@@ -54,7 +54,7 @@ The **PCM1808 is I²S master** (divides SCKI to BCK/LRCK); the Pi runs slave (`G
 - [ ] **2.2 PCM5102A (GY-PCM5102 module) strapping** (S) `[CORR-5]` — solder pads: FLT=L, DEMP=L, **XSMT=H (UNMUTE — the #1 silent-output gotcha)**, **FMT=L (I²S)**. SCK→GND (internal PLL; no MCLK needed). DIN←GPIO21, BCK←GPIO18, LCK←GPIO19. Power per module (3.3 V).
 - [ ] **2.3 Playback smoke test** (S) — run Circle `sample/34-sounddevices` (I²S/PCM5102A) on Pi 5; confirm a test tone out of the PCM5102A. Validates `[CORR-5]` strapping + BCLK/LRCLK.
 - [ ] **2.4 Capture smoke test** (M) — run/adapt Circle `sample/42-soundinput`; confirm the PCM1808 produces non-zero samples (depends on Spike B MCLK). Format is fixed standard-I²S 24-in-32 `[CORR C3]` — no format selection to get wrong.
-- [ ] **2.5 Hardware I²S loopback** (M) — full-duplex `DeviceModeTXRX`: capture ADC → write straight to DAC. Confirms simultaneous in+out on the single I²S0 instance.
+- [ ] **2.5 Hardware I²S loopback** (M) — full-duplex `DeviceModeTXRX`: capture ADC → write straight to DAC. Confirms simultaneous in+out on the single **I²S1 (slave)** instance (post-pivot; `GDAW_I2S_SLAVE`).
 
 **Gate:** clean tone in (PCM1808) → out (PCM5102A) with no dropouts.
 
@@ -111,7 +111,7 @@ The **PCM1808 is I²S master** (divides SCKI to BCK/LRCK); the Pi runs slave (`G
 
 | Risk | Severity | Status | Mitigation |
 |------|----------|--------|------------|
-| Internal GPCLK MCLK route infeasible (`clk_i2s` shared with BCLK) `[CORR-4]` | High | **Mitigated 2026-07-09** | External MCLK: Arduino Nano ESP32 (ESP32-S3 APLL) → PCM1808 SCKI, decoupled from Pi 5 `pll_audio` |
+| Internal GPCLK MCLK route infeasible (`clk_i2s` shared with BCLK) `[CORR-4]` | High | **Mitigated 2026-07-09** | External MCLK: Arduino Nano ESP32 (ESP32-S3, **PLL_160M via `i2s_std`** — the S3 has *no* APLL) → PCM1808 SCKI, decoupled from Pi 5 `pll_audio` |
 | PCM5102A XSMT shipped muted `[CORR-5]` | Med | Open | Verify XSMT=H pad at 2.2 |
 | Accidentally adding `pciex4_reset=0` w/ Circle `[CORR-3]` | Low | Mitigated | Stock `config.txt`; documented |
 | Shipping unlicensed YIN/board files `[CORR-6]` | Med (legal) | Mitigated | Clean-room YIN; simplecodec3 = study-only |

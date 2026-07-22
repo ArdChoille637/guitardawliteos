@@ -1,6 +1,15 @@
 # GuitarDAWLiteOS — Hardware Review & Wiring
 
-**Date:** 2026-06-29. Every electrical value here is datasheet-verified (TI PCM1808 SLES177B, PCM5102A SLAS859C, RP1 Peripherals datasheet, RPi "Using the I²S peripherals" white paper RP-009699-WP-1, RPi 3-pin Debug Connector spec) and the two highest-risk decisions (power rails, front-end gain/bias) were independently re-checked. See also the wiring diagram (rendered in chat / `docs/wiring-diagram.svg`).
+> ⚠️ **Clock pivot (2026-07-10) — parts of this doc are rev-A (Pi-as-master) and were superseded.**
+> The as-built bench runs the **PCM1808 as I²S bus master** (MD0=MD1=**HIGH/3.3 V**, 256 fs) driving
+> BCK/LRCK, with the **Pi 5 as I²S slave** (`GDAW_I2S_SLAVE`, RP1 I2S1). Wherever this file still says
+> *Pi I²S0 master*, *MD0/MD1 → GND / slave mode*, or *BCLK/LRCLK sourced from Pi GPIO18/19*, that is the
+> **old topology** — the strap table and clock-direction columns below have been corrected inline, but the
+> analog/power/front-end rationale (the reason this doc exists) is unaffected and still current.
+> **Wire from [adc-hookup.md](adc-hookup.md) + the as-built SVG sheets; strapping MD0/MD1 to GND with the
+> current kernel gives a dual-slave dead bus (no BCK/LRCK, capture frozen at 0).**
+
+**Date:** 2026-06-29 *(strap/clock-direction tables corrected 2026-07-21 for the pivot).* Every electrical value here is datasheet-verified (TI PCM1808 SLES177B, PCM5102A SLAS859C, RP1 Peripherals datasheet, RPi "Using the I²S peripherals" white paper RP-009699-WP-1, RPi 3-pin Debug Connector spec) and the two highest-risk decisions (power rails, front-end gain/bias) were independently re-checked. See also the wiring diagram (rendered in chat / `docs/wiring-diagram.svg`).
 
 ## Headline findings
 1. **The research doc had no analog front-end. You cannot wire a guitar straight to the ADC.** A passive pickup is ~hundreds of kΩ at its resonant peak and only ~0.1–0.7 Vpp; the PCM1808 input is 60 kΩ and wants ~3 Vpp on a 2.5 V bias. Direct connection = ~14 dB of tone-sucking loading **and** far too quiet. A buffer + gain stage is mandatory (designed below).
@@ -15,8 +24,8 @@
 ## Bill of materials (Phase 1 audio board)
 | Qty | Part | Role | Notes |
 |----:|------|------|-------|
-| 1 | Raspberry Pi 5 | host | I²S0 master, 3.3 V GPIO |
-| 1 | PCM1808 (14-pin SSOP) **or** GY-PCM1808 breakout | stereo ADC (capture) | strap-only, slave mode |
+| 1 | Raspberry Pi 5 | host | **I²S1 slave** (post-pivot), 3.3 V GPIO |
+| 1 | PCM1808 (14-pin SSOP) **or** GY-PCM1808 breakout | stereo ADC (capture) | strap-only, **bus master** (256 fs) |
 | 1 | GY-PCM5102 (PCM5102A) breakout | stereo DAC (playback) | strap-only, internal PLL |
 | 1 | Dual op-amp, RRIO-ish, low-noise, 5 V | guitar front-end | **OPA1662** (best audio) or **OPA2353/OPA2350** (guaranteed single-5 V RRIO) |
 | 1 | ¼" mono jack | guitar input | switched/unswitched |
@@ -46,16 +55,16 @@ Header GND (J8 pin 6/9/…) ─► single-point star ground (AGND≡DGND under e
 ## Connection / netlist table
 Pi physical pins are J8 (40-pin header, identical layout to Pi 4). PCM1808 pins are the 14-SSOP numbers.
 
-### Clocks & data (I²S0, RP1 ALT function **a2**)
-**MCLK is no longer a Pi 5 GPIO signal** — see [claim-verification.md](claim-verification.md) ("Update 2026-07-09"): the Pi 5 has no on-chip path to a `pll_audio`-locked clock on any GPIO while I²S0 is running BCLK. MCLK now comes from a separate **Arduino Nano ESP32** board — see [../esp32-mclk/](../esp32-mclk/) — wired directly to the PCM1808, with no Pi 5 GPIO involved. Bench-verified at 12.2880 MHz via the board's own PCNT self-test.
+### Clocks & data (RP1 **I2S1**, slave; ALT function **a4** — *post-pivot*)
+**MCLK is no longer a Pi 5 GPIO signal** — see [claim-verification.md](claim-verification.md) ("Update 2026-07-09"): the Pi 5 has no on-chip path to a `pll_audio`-locked clock on any GPIO while its I²S peripheral is running BCLK. MCLK comes from a separate **Arduino Nano ESP32** board — see [../esp32-mclk/](../esp32-mclk/) — wired to the PCM1808's SCKI, with no Pi 5 GPIO involved. Bench-verified at 12.2880 MHz via the board's own PCNT self-test. **Post-pivot the PCM1808 (bus master) divides SCKI into BCK/LRCK and drives them; the Pi and DAC receive.**
 
-| Signal | Source | → to |
+| Signal | Source (drives) | → to (receives) |
 |--------|--------|------|
 | **MCLK** 12.288 MHz | Nano ESP32 **D2 / GPIO5** | PCM1808 **SCKI (pin 6)** *only* (PCM5102A self-clocks) |
-| **BCLK** (I²S0 SCLK) | Pi GPIO18 (pin **12**) | PCM1808 **BCK (pin 8)** + PCM5102A **BCK** |
-| **LRCLK/WS** (I²S0 WS) | Pi GPIO19 (pin **35**) | PCM1808 **LRCK (pin 7)** + PCM5102A **LCK** |
-| **Capture data** (I²S0 SDI) | Pi GPIO20 (pin **38**) | ← PCM1808 **DOUT (pin 9)** |
-| **Playback data** (I²S0 SDO) | Pi GPIO21 (pin **40**) | → PCM5102A **DIN** |
+| **BCLK** 3.072 MHz | **PCM1808 BCK (pin 8)** | → Pi GPIO18 (pin **12**) + PCM5102A **BCK** |
+| **LRCLK/WS** 48 kHz | **PCM1808 LRCK (pin 7)** | → Pi GPIO19 (pin **35**) + PCM5102A **LCK** |
+| **Capture data** | PCM1808 **DOUT (pin 9)** | → Pi GPIO20 (pin **38**) |
+| **Playback data** | Pi GPIO21 (pin **40**) | → PCM5102A **DIN** |
 
 Nano ESP32 and Pi 5 share a common ground (tie Nano ESP32 GND to the breadboard/Pi ground rail); the Nano ESP32 can be powered independently via its own USB.
 
@@ -66,12 +75,15 @@ Nano ESP32 and Pi 5 share a common ground (tie Nano ESP32 GND to the breadboard/
 | 3.3 V (header pin 1; LDO optional) | 1 | PCM1808 VDD (pin 4) |
 | GND | **6**, 9, 14, 20, 25, 30, 34, 39 | common star ground |
 
-### PCM1808 strapping (set before power-on; internal 50 kΩ pulldowns)
+### PCM1808 strapping (set before power-on; internal 50 kΩ pulldowns) — *post-pivot: MASTER*
 | Pin | Strap | Selects |
 |-----|-------|---------|
-| MD0 (10) | → GND | slave mode (with MD1) |
-| MD1 (11) | → GND | slave mode (256/384/512 fs auto) |
+| MD0 (10) | → **+3.3 V** | **master mode** (with MD1) |
+| MD1 (11) | → **+3.3 V** | **master, 256 fs** → divides 12.288 MHz SCKI into 3.072 MHz BCK + 48 kHz LRCK |
 | FMT (12) | → GND | **I²S, 24-bit** |
+
+> The rev-A build strapped MD0/MD1 → GND (slave). Post-pivot that is **wrong**: with the Pi also slave
+> (`GDAW_I2S_SLAVE`) nobody would drive the bus. Both mode pins go to **3.3 V**.
 
 ### PCM5102A (GY-PCM5102) config
 | Item | Set | Why |
@@ -122,7 +134,7 @@ Mono guitar → **VINL** only. Single 5 V supply, everything biased to an indepe
 ---
 
 ## Level & compatibility summary
-- Pi → PCM1808 inputs: Pi drives 3.3 V ≫ 2 V VIH min. ✓ (SCKI/MD/FMT are 5 V-tolerant; BCK/LRCK in slave mode are *not* 5 V-tolerant, but a 3.3 V Pi never violates that.)
+- All I²S links are 3.3 V ↔ 3.3 V, either direction (post-pivot the ADC drives BCK/LRCK into the Pi; the Pi drives only DIN→DAC). Pi VOH/PCM1808 outputs all sit at ~3.3 V ≫ the 2 V VIH min. ✓ No level shifters. (SCKI/MD/FMT are 5 V-tolerant; the PCM1808's clock pins are *not*, but nothing here exceeds 3.3 V.)
 - PCM1808 DOUT (VOH ≥ 2.8 V) → Pi GPIO (reads >2.0 V high). ✓
 - RP1 GPIO is **3.3 V CMOS, not 5 V tolerant** — never feed a 5 V logic signal back into GPIO20. Default drive 4 mA is fine for short traces; bump to 8–12 mA for longer runs / fan-out.
 

@@ -1,5 +1,13 @@
 # GuitarDAWLiteOS — KiCad project files
 
+> ⚠️ **This netlist is rev-A (Pi-as-master) and predates the 2026-07-10 clock pivot.** `gen.py` still routes
+> **MCLK from Pi header pin 7 (GPIO4)** into the PCM1808 SCKI and **straps MD0/MD1 to GND (slave)**. The
+> as-built bench is the opposite: **MCLK from the Nano ESP32 D2**, **MD0/MD1 to +3.3 V (ADC = bus master)**,
+> Pi = I²S slave. Use this project as a **PCB-design learning vehicle only** — do **not** fab a board from it
+> until `gen.py` is re-generated for the pivot (rev-B). The as-built truth is [../docs/adc-hookup.md](../docs/adc-hookup.md)
+> + the wiring/codec SVG sheets. "Same I²S/clock topology either way" below refers to the *breadboard vs
+> bare-chip* choice, **not** to master/slave — that pivot post-dates this board.
+
 An openable KiCad project for the Phase-1 audio board, plus the generated inputs that feed it.
 
 > **To open in KiCad: open `guitardawliteos.kicad_pro`.** A netlist (`.net`) and a symbol library (`.kicad_sym`) are *not* openable projects — that's why the earlier files wouldn't load. New to this? Read [../docs/pcb-learning-path.md](../docs/pcb-learning-path.md).

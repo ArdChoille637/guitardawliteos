@@ -29,7 +29,7 @@ Why this beats our previous HDMI plan, not just matches it:
 - **HDMI + USB HID touch** (Circle's digitizer-class driver, multi-touch, validated on Waveshare 5″/7″ panels) — zero HAT changes; the dev-bench option.
 - **SPI TFT** (ST7789/ILI9341 + XPT2046 resistive) — only as an optional *mini* panel (e.g. a 2.8″ "tape counter window"); must use **SPI0 (GPIO 7–11)** — SPI1/SPI3 collide with our I²S pins.
 
-**New spike — Spike C (display):** build `sample/28-touchscreen` with `DSI_DISPLAY=0` on the Touch Display 2, then `addon/lvgl/sample` with 90° rotation. Run alongside Spike B (MCLK). Gate for committing the faceplate cutout dimensions.
+**New spike — Spike C (display):** build `sample/28-touchscreen` with `DSI_DISPLAY=0` on the Touch Display 2, then `addon/lvgl/sample` with 90° rotation. (Spike B / MCLK is already closed.) Gate for committing the faceplate cutout dimensions.
 
 ---
 

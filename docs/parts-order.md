@@ -78,7 +78,7 @@
 - **Cassette mechanism** (Tanashin TN-21ZLG clone, ~$10–20) + **TA7668 head-preamp board** (~$10) — AliExpress. Level B, not needed yet.
 - **200 µA VU meter movements** (~$5–15) — AliExpress/Amazon. M7 faceplate, not needed yet.
 - **NKK UB illuminated switches** — DigiKey *does* carry them (~$10+ each) but they're M7 panel parts; don't buy until the faceplate design.
-- **Bench tools**: you'll want a way to see 12.288 MHz for Spike B — any scope ≥25 MHz or a cheap LA. (DigiKey sells Digilent, but eBay/used is the budget route.)
+- **Bench tools**: Spike B (12.288 MHz MCLK) is **done** — frequency-verified 2026-07-09 via the Nano's own PCNT self-test, no scope needed. A scope/LA (≥25 MHz, e.g. Digilent or used) is now **optional**, only for the open *jitter-characterization* question (see the M2 review) — not required to build or bring up the bench.
 
 ## Rough totals
 - **Core prototype** (§2–§6, no Pi/display): **~$95–110**
