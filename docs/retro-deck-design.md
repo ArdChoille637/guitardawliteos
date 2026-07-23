@@ -1,35 +1,95 @@
 # GuitarDAWLiteOS — Retro Deck Design (Phase 2 architecture)
 
-**Date:** 2026-06-30. The three Phase-2 directions — **touch display**, **cassette analog tracking**, **retro-gear form factor** — researched against primary sources (Circle source at our pinned commit, TI/Tascam datasheets, the official HAT+ spec, maker-community practice) with adversarial verification on the two architecture-deciding claims. Both **confirmed**.
+**Date:** 2026-06-30. The three Phase-2 directions — **display**, **cassette analog tracking**, **retro-gear form factor** — researched against primary sources (Circle source at our pinned commit, TI/Tascam datasheets, the official HAT+ spec, maker-community practice) with adversarial verification on the two architecture-deciding claims. Both **confirmed**.
 
-**The product in one sentence:** a cassette-deck-styled open-hardware guitar workstation — Pi 5 + audio HAT+ inside a folded-metal/wood-cheek chassis, a PCB faceplate with real VU meters and illuminated transport keys, a 7″ touch display as the "cassette window," and an *optional real cassette tape loop* as a lo-fi analog insert.
+> **UI pivot (2026-07-23, Michael's decision): NO touch.** The interface is **5 rotary encoder knobs
+> (with push) + a sustain-pedal footswitch + a plain display**. Touch is dropped as an input method —
+> which fits the retro-deck concept better anyway (real knobs on a tape deck). §1 and §1b below are
+> rewritten to the new facts (all verified against the pinned Circle tree, 2026-07-23); the GPIO budget
+> in §4 is recomputed and now closes only with a zero-GPIO display (DSI display-only or HDMI).
+
+**The product in one sentence:** a cassette-deck-styled open-hardware guitar workstation — Pi 5 + audio HAT+ inside a folded-metal/wood-cheek chassis, a PCB faceplate with real VU meters, illuminated transport keys, **five rotary knobs and a footswitch jack as the interface**, a display as the "cassette window," and an *optional real cassette tape loop* as a lo-fi analog insert.
 
 ---
 
-## 1. Touch display — SOLVED, zero GPIO cost ✅ (verified in Circle source)
+## 1. Display (no touch) — two zero-GPIO options; SPI TFT ruled out ✅ (re-verified 2026-07-23)
 
-**Default: official Raspberry Pi Touch Display 2 (7″; 5″ for a compact build) on the DSI port, driven by Circle's `addon/rp1dsi`.**
+**The display is output-only.** Verified against the pinned Circle tree after the UI pivot:
 
-The decisive finding: Circle gained `addon/rp1dsi` on **2026-05-26** — a bare-metal port of Raspberry Pi's own Linux DSI driver for Pi 5. It is present at our pinned commit (`22722a76`) and provides:
-- **Video**: `CRPiTouchScreen` (a full `CDisplay`) → Synopsys DSI host + **RP1 DPI-DMA autonomous scanout** (CPU cost = drawing + cache-clean only; no per-frame CPU streaming).
-- **Touch**: ported Goodix GT911 driver (Touch Display 2, 5-contact) and FT5x06 (v1 panel), exposed via the same generic `touch1` device as USB touch.
-- **Backlight** over I²C. Auto-detects v1 vs TD2 from the display's regulator ID.
-- `sample/28-touchscreen` and `addon/lvgl/sample` already build for it (`DSI_DISPLAY = 0`).
+- **Option A (product default): Touch Display 2 as a *display-only* panel.** Circle's `addon/rp1dsi`
+  supports this first-class: `CRPiTouchScreen(pInterrupt, nDepth, nDisplay, bEnableTouch=FALSE)`
+  (`rpitouchscreen.h:40-42`) — with `FALSE` the GT911 is **never even powered** (CTP_RESET stays
+  deasserted, no touch I²C traffic, `rpitouchscreen2.cpp:100-136`), while panel init, DSI DPI-DMA
+  autonomous scanout, I²C backlight control, and the vsync callback all still work. LVGL runs fine
+  without touch (`CLVGL(CDisplay*)`; the `touch1` lookup is optional/non-fatal, `lvgl.cpp:151`).
+  **Zero J8 GPIOs** (video + control I²C ride the dedicated DISP FFC on RP1 bus 6/4; only 5 V/GND from
+  pins 2/6) — the property the whole GPIO budget in §4 now depends on. Still portrait-native 720×1280 →
+  LVGL 90° software rotation. Yes, we pay for a touch layer we don't use — there is **no non-touch
+  official DSI panel**, and `rp1dsi` supports **only** the official panels (hard-coded regulator
+  auto-detect at I²C 0x45, `rpitouchscreen.cpp:62-100`; third-party DSI would need a new panel driver).
+- **Option B (dev bench, works today): HDMI.** The M3 kernel already renders on HDMI via
+  `CScreenDevice`, headless-safe. Unlimited panel choice, zero GPIO, but: firmware framebuffer path is
+  the one Circle marks "limited", mode fixed at boot (no hotplug), bulkier inside the chassis, and the
+  documented WLAN-vs-HDMI interaction (irrelevant — we use no WLAN). Fine until the faceplate forces
+  the decision.
+- **SPI TFT: RULED OUT (2026-07-23).** Circle does have ST7789/ILI9341 drivers (`addon/display/`), but
+  the pin budget cannot close: 5 encoders + pedal need 16 GPIOs, and a TFT needs SPI0 CE/DC/RST on pins
+  the encoders now own — plus the APA102 bargraph shares SPI0 and has **no chip select** (it clocks in
+  all bus traffic), so TFT-on-SPI0 corrupts it electrically. Dead option, not a fallback.
 
-Why this beats our previous HDMI plan, not just matches it:
-- **Zero 40-pin GPIOs.** DSI video + touch I²C ride the dedicated FPC connector (RP1 I²C bus 6/4 on the DISP FFC — *not* header pins). The display takes only 5 V/GND from header pins 2/6. The whole header stays free for audio + controls.
-- **Bypasses the Pi 5 firmware HDMI path entirely** — the thing Circle itself marks "limited" (missing modes, some displays dead, the WLAN-vs-HDMI interaction). `rp1dsi` talks to RP1 directly.
-- **Audio-safe**: DSI scanout and I²S use separate RP1 DMA engines; UI runs on its own core (Core 3 in our plan).
+**Spike C (re-scoped): display-only + controls bring-up.** Build `sample/28-touchscreen` with
+`DSI_DISPLAY=0` and `bEnableTouch=FALSE` on the TD2, then `addon/lvgl/sample` with 90° rotation and
+**encoder-driven navigation** (LVGL encoder input group). Gate for committing the faceplate cutout
+dimensions. HDMI path needs no spike — already proven live.
 
-**Caveats (both manageable):**
-1. **TD2 is portrait-native 720×1280**; hardware rotation exists only for the discontinued v1 panel. → Build the UI in **LVGL with 90° software rotation from day one**; mount the panel sideways in the faceplate. Trivial load on a Cortex-A76.
-2. The addon is **~5 weeks old, develop-only, unreleased** → treat as beta; our pin already includes it; add a bring-up spike (below).
+---
 
-**Fallbacks (both verified working on Pi 5):**
-- **HDMI + USB HID touch** (Circle's digitizer-class driver, multi-touch, validated on Waveshare 5″/7″ panels) — zero HAT changes; the dev-bench option.
-- **SPI TFT** (ST7789/ILI9341 + XPT2046 resistive) — only as an optional *mini* panel (e.g. a 2.8″ "tape counter window"); must use **SPI0 (GPIO 7–11)** — SPI1/SPI3 collide with our I²S pins.
+## 1b. Control surface — 5 rotary encoders + sustain-pedal footswitch (NEW 2026-07-23, verified)
 
-**New spike — Spike C (display):** build `sample/28-touchscreen` with `DSI_DISPLAY=0` on the Touch Display 2, then `addon/lvgl/sample` with 90° rotation. (Spike B / MCLK is already closed.) Gate for committing the faceplate cutout dimensions.
+**Hardware on hand:** five digital rotary encoder knobs with integrated push switches (EC11-class or
+KY-040-class modules) + (planned) a Yamaha sustain pedal as the footswitch.
+
+**Encoder electrical facts (verified in the pinned Circle tree):**
+- RP1 internal pull-ups exist and work: `SetMode(GPIOModeInputPullUp)` (`gpiopin2712.cpp:257-299`).
+  Also enable the RP1 **Schmitt trigger** per input (`SetSchmittTrigger`, `gpiopin2712.cpp:301-319`) —
+  `SetMode` does *not* do it automatically.
+- **KY-040 module gotcha:** the boards carry 10 k pull-ups on A/B to their "+" pin — power "+" from
+  **3.3 V only** (5 V would drive 5 V into RP1 pads through those pull-ups). The SW pin usually has
+  **no** onboard pull-up → still enable the internal one. Bare EC11: common → GND, internal pull-ups on
+  A/B/SW, nothing else needed.
+- All pins must be configured on **core 0 during `CKernel::Initialize`** (RP1 southbridge assert,
+  `gpiopin2712.cpp:185`), before the secondary cores start.
+
+**Read strategy (decided): poll from core 3, no GPIO interrupts.** Circle *has* full RP1 GPIO IRQ
+machinery, but all peripheral IRQs land on **core 0** — the audio DMA/mix core — and 5 fast-turned
+encoders emit O(10³) edges/s plus bounce bursts; each would be a PCIe-latency ISR stealing audio
+headroom for zero benefit. Instead:
+- One `CGPIOPin::ReadAll()` returns the **entire GPIO bank 0 in a single register read**
+  (`gpiopin2712.cpp:594-597`) — all 16 inputs in one ~1 µs PCIe round-trip, never 16 separate reads.
+- Core 3 (currently the 2 s stats loop) restructures into a **2 kHz tick** (worst-case flicked EC11 ≈
+  400 edges/s → ≥1 kHz needed; 2 kHz safe). Cost: **≈0.2–0.5 % of one core** — negligible.
+- Quadrature decode via the 16-entry transition table (bounce between adjacent Gray states cancels —
+  no time-debounce needed); gate to one count per detent. Push switches + pedal: ~10 ms
+  consecutive-sample debounce on the same tick. Events → small SPSC queue to the UI (same pattern as
+  the audio ring).
+
+**Sustain pedal (Yamaha FC5/FC4A) — verified facts, incl. the polarity gotcha:**
+- ¼″ **TS** plug, passive momentary leaf switch, nothing else inside (no debounce — do it in software).
+  (FC3A is the TRS half-damper — different animal, don't buy that one.)
+- **Yamaha is NORMALLY CLOSED at rest — pressing OPENS the contact** (teardown + FC4A spec sheets +
+  measurement consensus; much web folklore says the opposite and is wrong; Roland DP-series is the
+  *same* NC convention, Korg/Casio are the NO camp; Boss FS-5U has a polarity slide).
+- **Firmware handles polarity by auto-calibration, like every commercial keyboard:** sample the GPIO at
+  boot (and on jack insertion) and latch that level as RELEASED — works for Yamaha NC, Korg-style NO,
+  and either FS-5U slide position with zero config. (Yamaha's own FAQ documents this exact power-on
+  sampling; a manual invert setting is the fallback, per Roland's "Damper Polarity" menu precedent.)
+- Wiring: jack sleeve → GND, tip → GPIO25 with internal pull-up + Schmitt. Caveat: an **unplugged jack
+  reads identical to "pressed"** for an NC pedal — use a switched-contact jack on the faceplate if
+  plug-detection matters.
+
+**Suggested knob map (v0, Michael's to override):** K1 input trim · K2 monitor/output level · K3 loop
+select (push = arm rec/overdub) · K4 feedback/decay · K5 menu-navigate (push = confirm). Pedal =
+classic looper semantics: tap = record/overdub toggle, double-tap = stop, hold = clear.
 
 ---
 
@@ -88,19 +148,46 @@ The HAT+ spec (2023-12, current 2024-12) **deprecates the rigid 65×56 rule**: a
 
 ---
 
-## 4. Rev-B GPIO budget (draft — finalize at rev-B schematic)
-| GPIO | Assignment | Fixed? |
-|------|-----------|--------|
-| 0/1 | ID EEPROM (ID_SD/ID_SC) — nothing else | HAT+ rule |
-| 2/3 | I²C1 → broken out (hackability + panel expander option) | free bus |
-| 4 | **free** — MCLK moved off-Pi to an external Nano ESP32 (2026-07-09, see [claim-verification.md](claim-verification.md)); `GPCLK0`/GPIO4 route was ruled out (`clk_i2s` conflicts with BCLK) | reclaimed |
-| 18–21 | I²S0 (BCLK/LRCLK/DIN/DOUT) | fixed |
-| 7–11 | SPI0 → panel bus: APA102 bargraph, optional SPI TFT | reserved |
-| 5, 6, 16, 17 | TRANSPORT: REM optoMOS, IR_TX, SOLENOID_DRV, MOTOR_EN | rev B |
-| 22–27 | Footswitches + transport sensors (TACH, SW1–3) | aux block |
-| 12/13 | spare (PWM-capable) — panel lamp dimming etc. | spare |
+## 4. Rev-B GPIO budget (recomputed 2026-07-23 for the knob-UI pivot — finalize at rev-B schematic)
 
-**Standing rule:** never reassign 4/18–21; keep 7–11 for SPI0 (SPI1/SPI3 are dead to us — they collide with I²S pins).
+**The math:** 28 J8 GPIOs − 2 (EEPROM) − 4 (I²S) − 2 (I²C1) − 2 (APA102 data/clk) = 18 native pins;
+the new controls need **16** (5 × {A, B, SW} + pedal). It closes **only** because the display is
+zero-GPIO (§1) — and only by reclaiming the SPI-TFT fallback pins (7/8/9), the header-UART breakout
+(14/15 — the JST-SH debug connector is unaffected), and moving the slow tape-transport signals to an
+**MCP23017 expander on I²C1** (the "panel expander option" from the old table, now exercised).
+
+| GPIO | Assignment | Was |
+|------|-----------|-----|
+| 0/1 | ID EEPROM (ID_SD/ID_SC) — nothing else (HAT+ rule) | unchanged |
+| 2/3 | I²C1 → **MCP23017 panel expander** (transport slow signals + NKK keys + lamps) | "expander option" |
+| 4 | **ENC1_A** | free (reclaimed from MCLK) |
+| 5 / 6 | ENC1_B / ENC1_SW | REM → 26 · IR_TX → 27 |
+| 7 / 8 / 9 | ENC2_A / ENC2_B / ENC2_SW | SPI0 CE1/CE0/MISO (SPI-TFT fallback — **dropped**) |
+| 10 / 11 | SPI0 MOSI / SCLK → **APA102 bargraph** (data + clock) | unchanged |
+| 12 / 13 | ENC3_A / ENC3_B | spare PWM (lamp dimming → expander or APA chain) |
+| 14 / 15 | ENC3_SW / ENC4_A | header UART0 breakout (reclaimed; JST debug console unaffected) |
+| 16 / 17 | ENC4_B / ENC4_SW | SOLENOID_DRV / MOTOR_EN (→ expander) |
+| 18–21 | I²S (ADC-driven BCK/LRC + data; Pi slave) | unchanged, fixed |
+| 22 / 23 / 24 | ENC5_A / ENC5_B / ENC5_SW | aux block |
+| 25 | **SUSTAIN_PEDAL** (¼″ TS jack, pull-up + Schmitt, boot auto-polarity — §1b) | aux block |
+| 26 | REM optoMOS (punch-in relay) | was 5 |
+| 27 | IR_TX footprint (38 kHz carrier — needs a native pin, can't come from the expander) | was 6 |
+
+**On the MCP23017:** SOLENOID_DRV, MOTOR_EN, TACH_IN, SW1–3 (tape-present / rec-inhibit / stop-pos),
+NKK UB transport keys, lamp on/off. All slow; acceptable because Level-B tape is "provision, populate
+later."
+
+**Honest consequences of closing the budget:**
+- **J8 is 100 % consumed — zero spare native GPIOs.** "Broken-out spares" hackability now lives on the
+  I²C1 expander bus instead. (Optional recovery: REM is slow — moving it to the expander frees GPIO26
+  as the single spare.)
+- Solenoid pulse timing and TACH edge-timing from an I²C expander are degraded (poll-only; no free
+  native INT pin) — flagged for the rev-B schematic if Level B ever populates.
+- PWM lamp dimming is gone; NKK lamps go on/off via expander or ride the APA102 chain.
+
+**Standing rule (amended 2026-07-23):** never reassign 18–21; keep **10/11** for the APA102 (SPI0
+data/clock). The old "keep all of 7–11 for SPI0" rule died with the SPI-TFT option; GPIO4's
+reservation died with the MCLK reclaim.
 
 ## 5. What changes where
 - **Rev A (current KiCad project)**: unchanged — it's the learning vehicle. Everything above is **rev B**.
@@ -111,8 +198,9 @@ The HAT+ spec (2023-12, current 2024-12) **deprecates the rigid 65×56 rule**: a
 ## 6. Risk register (Phase 2)
 | Risk | Severity | Mitigation |
 |------|----------|------------|
-| `rp1dsi` is ~5 weeks old, unreleased | Med | Spike C before faceplate commit; HDMI+USB-touch fallback verified |
-| TD2 portrait-only scanout | Low | LVGL 90° rotation from day one |
+| `rp1dsi` is young, unreleased | Med | Spike C (display-only, `bEnableTouch=FALSE`) before faceplate commit; plain-HDMI fallback already proven live |
+| TD2 portrait-only scanout | Low | LVGL 90° rotation from day one (unchanged by the touch drop) |
+| J8 100 % consumed by the knob UI | Med | Expander bus is the hackability escape hatch; REM→expander frees one spare if needed |
 | REM punch-in only fits portable/Portastudio decks | Low | IR footprint + TRANSPORT header cover the rest |
 | Piano-key/walnut parts are NOS/discontinued | Med | NKK UB keys + open-DXF wood cheeks in the open BOM; NOS only for personal builds |
 | Pi 5 throttling in closed box | High | Active Cooler under 16 mm-standoff HAT + vent grilles + fan curve |

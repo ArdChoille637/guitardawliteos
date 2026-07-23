@@ -1,6 +1,6 @@
 # GuitarDAWLiteOS
 
-Bare-metal **Raspberry Pi 5** loop recorder / guitarist workbench. I²S audio (PCM1808 ADC + PCM5102A DAC), SD recording, HDMI framebuffer UI, GPIO footswitches — **no OS, no USB in the audio path.** Built on the [Circle](https://github.com/rsta2/circle) bare-metal framework (GPLv3).
+Bare-metal **Raspberry Pi 5** loop recorder / guitarist workbench. I²S audio (PCM1808 ADC + PCM5102A DAC), SD recording, a plain display (no touch) with **5 rotary-encoder knobs + a sustain-pedal footswitch** as the interface — **no OS, no USB in the audio path.** Built on the [Circle](https://github.com/rsta2/circle) bare-metal framework (GPLv3).
 
 > **This is the project front door.** Everything links from here.
 
@@ -45,7 +45,7 @@ Bare-metal **Raspberry Pi 5** loop recorder / guitarist workbench. I²S audio (P
 - **[kicad/](kicad/)** — openable **KiCad project** (`guitardawliteos.kicad_pro`, KiCad-10-verified) + generated netlist/symbols/BOM from `gen.py` (ERC-checked). See [kicad/README.md](kicad/README.md).
 - **[docs/pcb-learning-path.md](docs/pcb-learning-path.md)** — **follow-along PCB-design curriculum + open-hardware roadmap** (M1 board-from-netlist → M4 Pi 5 HAT → M6 rev-B HAT+ → M7 faceplate → M8 retro deck → M9 CM5 carrier), hackability + licensing.
 - **[docs/parts-order.md](docs/parts-order.md)** — **DigiKey prototyping order** (verified live 2026-07-01): breadboard + codecs + front-end + tape Level A + Touch Display 2, with MPNs, quantities, substitutions for dead parts, and the not-DigiKey list.
-- **[docs/retro-deck-design.md](docs/retro-deck-design.md)** — **Phase-2 architecture (verified)**: Touch Display 2 via Circle `addon/rp1dsi` (zero GPIO), cassette tape loop as analog insert (Level A ships in rev B, VINR return + REM punch-in), three-layer retro mechanicals (HAT+ core / faceplate PCB / metal+wood chassis), rev-B GPIO budget.
+- **[docs/retro-deck-design.md](docs/retro-deck-design.md)** — **Phase-2 architecture (verified; UI pivot 2026-07-23)**: **5 rotary encoders + sustain pedal + display-only panel** (TD2 via `rp1dsi` with `bEnableTouch=FALSE`, zero GPIO — or plain HDMI; SPI TFT ruled out), cassette tape loop as analog insert (Level A ships in rev B, VINR return + REM punch-in), three-layer retro mechanicals, recomputed rev-B GPIO budget (J8 fully allocated + MCP23017 expander).
 - **[docs/breadboard-build.md](docs/breadboard-build.md)** + [breadboard-layout.svg](docs/breadboard-layout.svg) — solderless build with the GY modules + a DIP op-amp; placement + step-by-step + gotcha checklist.
 - **[docs/adc-hookup.md](docs/adc-hookup.md)** — **bench card: every wire for Pi 5 + PCM1808 + Nano ESP32 capture hookup** (power, ground, straps, clocks, data, order of operations).
 - **[docs/tl072-frontend.md](docs/tl072-frontend.md)** — **drawer-parts front-end variant: TL072 on 9 V** (SPICE-verified; two changes from the canonical schematic) + CD4053BE rev-B notes. Schematic sheet: [tl072-frontend-schematic.svg](docs/tl072-frontend-schematic.svg).

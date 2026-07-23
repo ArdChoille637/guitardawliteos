@@ -70,8 +70,16 @@
 ## 8. Display
 | Qty | MPN | Item | ~$ | Note |
 |--:|------|------|---:|------|
-| 1 | **SC1635** | **Touch Display 2, 7″** (720×1280 DSI) | 60 | The Spike-C / retro-deck default. ⚠️ Earlier docs guessed SC1148 — that's the Active Cooler; **SC1635** is the 7″ TD2. |
-| (1) | SC1975 | Touch Display 2, 5″ | 40 | Compact-build variant — optional. |
+| 1 | **SC1635** | **Touch Display 2, 7″** (720×1280 DSI) | 60 | The Spike-C / retro-deck default — **used display-only** (`bEnableTouch=FALSE`; UI pivot 2026-07-23: knobs, not touch). No non-touch official DSI panel exists and `rp1dsi` only drives the official panels, so the touch layer is paid for but unused. Plain HDMI = the $0 bench alternative. ⚠️ Earlier docs guessed SC1148 — that's the Active Cooler; **SC1635** is the 7″ TD2. |
+| (1) | SC1975 | Touch Display 2, 5″ | 40 | Compact-build variant — optional (also display-only). |
+
+### 8b. Control surface (UI pivot 2026-07-23 — knobs Michael already owns + pedal additions)
+| Qty | Part | What | ~$ | Note |
+|----:|------|------|---:|------|
+| 5 | EC11-class encoder w/ push (e.g. Bourns **PEC11R-4215F-S0024**) | rotary knob + push | ~1.50 ea | **Michael already has 5 knob-button encoder modules** — buy nothing unless they prove to be 5 V-only boards. KY-040 modules: power "+" from **3.3 V only**; SW pin needs the internal pull-up. |
+| 1 | ¼″ TS panel jack (Switchcraft 111X pattern) | sustain-pedal input | ~3 | Second ¼″ jack beyond the guitar input. Switched-contact tip if plug-detection wanted. |
+| 1 | Yamaha **FC5** (or FC4A) | sustain-pedal footswitch | ~20 | TS momentary, **normally-closed at rest** — firmware auto-polarity at boot handles it (and any NO pedal). Avoid FC3A (TRS half-damper, not a switch). |
+| 1 | **MCP23017-E/SP** | I²C1 panel expander (rev-B) | ~2 | Absorbs the slow tape-transport signals + NKK keys; required by the recomputed GPIO budget (J8 is fully consumed by the knob UI). |
 
 ## NOT from DigiKey (order elsewhere)
 - **GY-PCM5102 / GY-PCM1808 modules** — AliExpress/Amazon (~$3–8). Fastest breadboard path; §3's bare-chips-on-adapters is the DigiKey-only equivalent.
