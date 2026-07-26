@@ -1,0 +1,34 @@
+# GDB init for SWD-debugging GuitarDAWLiteOS on the Pi 5.
+#   aarch64-elf-gdb -x debug/gdbinit src/kernel_2712.elf
+# Requires openocd-rpi5.sh already running in another shell.
+
+set confirm off
+set pagination off
+set architecture aarch64
+
+# Core 0. Cores 1-3 are :3334, :3335, :3336 (separate GDB instances).
+target extended-remote :3333
+
+# Circle's kernel_address=0x80000 (sdcard/config.txt) — the ELF is linked there,
+# so no `add-symbol-file` offset is needed.
+
+define reload
+  load
+  tbreak main
+  continue
+end
+document reload
+Reflash the ELF over SWD and run to main. No SD-card swap, no power cycle.
+end
+
+define coreinfo
+  info threads
+  monitor targets
+end
+document coreinfo
+Show OpenOCD's view of all four Cortex-A76 cores.
+end
+
+echo \n== GuitarDAWLiteOS SWD session ==\n
+echo Try: reload    (load + break at main)\n
+echo      coreinfo  (all four cores)\n\n

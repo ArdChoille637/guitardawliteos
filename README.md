@@ -50,6 +50,7 @@ Bare-metal **Raspberry Pi 5** loop recorder / guitarist workbench. I²S audio (P
 - **[docs/adc-hookup.md](docs/adc-hookup.md)** — **bench card: every wire for Pi 5 + PCM1808 + Nano ESP32 capture hookup** (power, ground, straps, clocks, data, order of operations).
 - **[docs/tl072-frontend.md](docs/tl072-frontend.md)** — **drawer-parts front-end variant: TL072 on 9 V** (SPICE-verified; two changes from the canonical schematic) + CD4053BE rev-B notes. Schematic sheet: [tl072-frontend-schematic.svg](docs/tl072-frontend-schematic.svg).
 - **[docs/build-setup.md](docs/build-setup.md)** — toolchain, build, SD flash, UART.
+- **[docs/debug-probe.md](docs/debug-probe.md)** — **Raspberry Pi Debug Probe on the Pi 5**: UART console (mode A) vs. SWD breakpoint debugging of all four cores (mode B), cabling, and the GPIO14/15 conflict with the encoder pinout.
 - Original Phase-1 research reference: project `CLAUDE.md` (the GuitarDAWLiteOS research doc).
 
 ## Build foundation (pinned)

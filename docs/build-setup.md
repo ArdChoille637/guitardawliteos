@@ -45,13 +45,15 @@ DTBs/overlay were pulled from the firmware revision Circle pins (`0641c5bf…`);
 ## UART debug console (Milestone 0.4 — optional, for headless/log capture)
 The HDMI default needs no extra hardware. To route the log to a serial console instead:
 1. Rename the staged file on the card: `cmdline.txt.uart` → **`cmdline.txt`** (contents: `logdev=ttyS11`). On Pi 5 the serial log device is **`ttyS11`**.
-2. Connect a **3.3 V USB-to-serial adapter** to the Pi 5's **dedicated 3-pin UART/debug connector** (the small JST connector, *not* the 40-pin header): adapter **RX ← Pi TX**, adapter **TX → Pi RX**, **GND ↔ GND**. Do **not** connect the adapter's VCC.
+2. Connect the **Raspberry Pi Debug Probe** ("**U**" port) to the Pi 5's **dedicated 3-pin UART/debug connector** (the small JST connector, *not* the 40-pin header) using the JST-SH↔JST-SH cable from the Probe box. It is **straight-through, pin 1 to pin 1** — no TX/RX swapping, the crossover is built into the connector spec. No VCC. (A generic 3.3 V USB-serial adapter also works: adapter **RX ← Pi TX**, **TX → Pi RX**, **GND ↔ GND**, VCC unconnected.)
 3. On the Mac, open the console at **115200 8N1**:
    ```bash
-   ls /dev/cu.usb*        # find the adapter, e.g. /dev/cu.usbserial-XXXX
-   screen /dev/cu.usbserial-XXXX 115200      # (quit: Ctrl-A then k)
+   ls /dev/cu.usbmodem*   # the Probe is a CDC device, e.g. /dev/cu.usbmodem11402
+   screen /dev/cu.usbmodem11402 115200       # (quit: Ctrl-A then k)
    ```
 4. Power on; the Circle log streams over serial. (Ref: Circle `doc/bootloader.txt`, `doc/cmdline.txt`.) If the dedicated connector gives nothing, the fallback is GPIO14=TXD/GPIO15=RXD on the 40-pin header.
+
+> For SWD breakpoint debugging over the *same* connector (Probe "**D**" port, `enable_jtag_gpio=1`, OpenOCD + GDB on all four cores), see **[debug-probe.md](debug-probe.md)**. The two modes are mutually exclusive per boot.
 
 ## Notes / gotchas carried from verification
 - **Do NOT add `pciex4_reset=0`** to `config.txt` — Circle brings up the PCIe RC itself (see [claim-verification.md](claim-verification.md) #3).
