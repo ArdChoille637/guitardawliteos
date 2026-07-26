@@ -14,8 +14,10 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Lower this if the DAP is flaky (rpi5.cfg defaults to 4000 kHz).
 SPEED="${SPEED:-4000}"
 
+# NOTE: the speed override MUST come after rpi5.cfg — that file ends with its own
+# `adapter speed 4000`, so an earlier -c is silently overwritten.
 exec openocd \
   -f interface/cmsis-dap.cfg \
-  -c "adapter speed ${SPEED}" \
   -f "${HERE}/rpi5.cfg" \
+  -c "adapter speed ${SPEED}" \
   "$@"
