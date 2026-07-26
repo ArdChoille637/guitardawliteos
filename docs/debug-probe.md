@@ -16,6 +16,11 @@ the 40-pin header (see [Serial while in SWD mode](#serial-while-in-swd-mode)).
 orientation, and the probe are all good before you add OpenOCD to the list of things
 that could be wrong.
 
+**Status:** mode A ✅ verified live 2026-07-25. Mode B host side ✅ verified (OpenOCD sees
+the probe, SWD interface ready); target side untested — needs `enable_jtag_gpio=1` on the
+booted card. **Recommendation: stay in mode A through the M2 wiring** — mode B takes the
+console away, and during first light a live frame counter beats breakpoints.
+
 ---
 
 ## Cabling (both modes)
@@ -65,6 +70,22 @@ resistors. So a wrong-port mistake costs you a confusing session, not hardware.
    Quit with `Ctrl-A` then `k`, then `y`. If `screen` leaves the terminal wedged:
    `reset`.
 5. Power on the Pi. Circle's log streams out.
+
+**✅ Verified live 2026-07-25** — `gdawcores:` / `gdawlite:` lines streaming at 115200.
+Two things that cost time getting here:
+
+- **The device name changes with the USB port** (`cu.usbmodem11402` on one port,
+  `cu.usbmodem2102` on another). Re-run `ls /dev/cu.usbmodem*` after every replug.
+- **A baud typo looks like a wiring fault.** `11520` instead of `115200` produces
+  streams of `x!00))1)!!!` garbage — which actually *proves* the cable is fine. Garbage
+  means data is arriving at the wrong rate; a genuine cabling fault gives you **silence**.
+
+**Expected counter reading with no ADC wired: all zeros.** `cap 0 play 0 starve 0 drop 0
+… laps 0/0` is correct, not a regression from the M3 bring-up that logged 48,000 frames/s
+— that run predated the clock pivot, when the Pi was I²S master. As slave
+([config.h:29](../src/config.h:29)) the engine produces no callbacks at all until the
+PCM1808 masters the bus. **This makes the console an M2 first-light instrument: `cap`
+starts counting the moment clocks arrive, and `starve`/`drop` say whether they're clean.**
 
 > The Pi 5's debug UART tops out at 921600 baud (EEPROM-configurable), but Circle logs at
 > 115200 and there is no reason to push it.
