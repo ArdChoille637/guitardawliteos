@@ -1,5 +1,12 @@
 # ADC capture hookup — Pi 5 + PCM1808 breakout + Nano ESP32 (bench card)
 
+> 🔒 **For the permanent soldered board, [solder-build.md](solder-build.md) overrides this card.**
+> This file is the *solderless bench* procedure. Three things differ on the permanent build:
+> the analog-5 V RC is **unconditional** (the "before adding parts, measure" gate below is
+> unrunnable — the silence FFT needs a working capture path); the 5 V rail **splits**, with the
+> DAC tapped upstream of the 10 Ω; and the Nano's **D2→D3 link stays** as a permanent MCLK health
+> readout instead of being removed. Straps, pin map and clock topology below are unchanged and correct.
+
 Every wire for the Milestone-2 **capture** side, written for the exact board
 on hand: the **purple "CJMCU-1808" PCM1808 breakout** (Rakstore/HiLetgo,
 ~25×32 mm, four 10 µF electrolytics, two 6-pin headers, no input jack).
@@ -35,7 +42,7 @@ the community-standard fix. One clock domain, rooted in the Nano's crystal.
 | **OUT** | 9 (DOUT) | → Pi **J8 pin 38** (GPIO20) — capture data |
 | **LRC** | 7 (LRCK) | → Pi **J8 pin 35** (GPIO19) — **ADC drives it** (48 kHz) |
 | **SCK** | 6 (SCKI) | ← **Nano ESP32 D2** (12.288 MHz MCLK) |
-| **GND** (right) | AGND/DGND | duplicate — connect either one, not both needed |
+| **GND** (right) | AGND/DGND | second ground pin — on the **soldered** build use it as the origin of the return conductor bundled with BCK/LRC/OUT ([solder-build.md](solder-build.md) §3); on a solderless bench one pin is enough |
 | **3.3V** (right) | 4 (VDD) | duplicate of "3.3" |
 
 ⚠️ **Never feed 5 V into the 3.3/3.3V pins** — chip VDD absolute max is 4 V;

@@ -20,12 +20,12 @@ text{font-family:-apple-system,Helvetica,Arial,sans-serif;fill:#2C2C2A}
 
 <g class="green"><rect x="40" y="70" width="180" height="120" rx="6"/></g>
 <text class="t" x="52" y="92">Nano ESP32 (S3)</text>
-<text class="ts" x="52" y="112">power: own USB-C<tspan x="52" dy="15">(never 5 V into VIN)</tspan><tspan x="52" dy="15">D2 = 12.288 MHz MCLK</tspan><tspan x="52" dy="15">GND → star ground</tspan></text>
-<text class="acc" x="52" y="180">remove D2→D3 jumper!</text>
+<text class="ts" x="52" y="112">power: own USB-C<tspan x="52" dy="15">(never 5 V into VIN)</tspan><tspan x="52" dy="15">D2 —[33 Ω]→ MCLK 12.288 MHz</tspan><tspan x="52" dy="15">TWO GND wires → star</tspan><tspan x="52" dy="15">(one twisted with MCLK)</tspan></text>
+<text class="acc" x="52" y="182">KEEP D2→D3 link (tap before the 33 Ω)<tspan x="52" dy="14">= permanent MCLK health readout</tspan></text>
 
 <g class="teal"><rect x="290" y="70" width="350" height="230" rx="6"/></g>
 <text class="t" x="302" y="92">CJMCU-1808 breakout (PCM1808) — I²S BUS MASTER</text>
-<text class="ts" x="302" y="112">SCK ← Nano D2 (12.288 MHz)<tspan x="302" dy="15">MD0, MD1 → 3.3 V rail  (MASTER, 256 fs → 48 kHz)</tspan><tspan x="302" dy="15">FMT → GND  (I²S format) — strap all three BEFORE power-on</tspan><tspan x="302" dy="15">+5V pin ← Pi J8 pin 2 (analog VCC — must be 5 V)</tspan><tspan x="302" dy="15">3.3 pin ← Pi J8 pin 1 (digital VDD — NEVER 5 V here, 4 V abs max)</tspan><tspan x="302" dy="15">GND → star ground (either GND pin, one is enough)</tspan></text>
+<text class="ts" x="302" y="112">SCK ← Nano D2 via 33 Ω (12.288 MHz)<tspan x="302" dy="15">MD0, MD1 → 3.3 V rail  (MASTER, 256 fs → 48 kHz)</tspan><tspan x="302" dy="15">FMT → GND  (I²S format) — strap all three BEFORE power-on</tspan><tspan x="302" dy="15">+5V ← J8 p2 via 10 Ω (+470 µF ∥ 0.1 µF here) — ADC ONLY, never the DAC</tspan><tspan x="302" dy="15">3.3 pin ← Pi J8 pin 1 (digital VDD — NEVER 5 V here, 4 V abs max)</tspan><tspan x="302" dy="15">BOTH GND pins: left → star · right → return with BCK/LRC/OUT</tspan></text>
 <text class="ts" x="302" y="212">Drives out:  BCK 3.072 MHz · LRC 48 kHz · OUT (data)</text>
 <text class="ts" x="302" y="232">Analog pads (board edge):  RIN / – / LIN</text>
 <text class="ts" x="302" y="250">  LIN ← front-end (Rs 1 k + Ca 1 nF right at this pad)</text>
@@ -49,7 +49,7 @@ text{font-family:-apple-system,Helvetica,Arial,sans-serif;fill:#2C2C2A}
 
 <g class="coral"><rect x="380" y="360" width="260" height="150" rx="6"/></g>
 <text class="t" x="392" y="382">GY-PCM5102 DAC (playback)</text>
-<text class="ts" x="392" y="402">BCK + LCK ← same ADC-driven bus<tspan x="392" dy="15">DIN ← Pi J8 p40 (GPIO21)</tspan><tspan x="392" dy="15">SCK → GND (internal PLL locks off BCK)</tspan><tspan x="392" dy="15">VIN ← 5 V · GND → star ground</tspan><tspan x="392" dy="15">pads: FLT=L · DEMP=L · XSMT=H(!) · FMT=L</tspan></text>
+<text class="ts" x="392" y="402">BCK + LCK ← same ADC-driven bus<tspan x="392" dy="15">DIN ← Pi J8 p40 (GPIO21)</tspan><tspan x="392" dy="15">SCK → GND (internal PLL locks off BCK)</tspan><tspan x="392" dy="15">VIN ← J8 p2 RAW (NOT via the 10 Ω)</tspan><tspan x="392" dy="15">GND → star ground</tspan><tspan x="392" dy="15">pads: FLT=L · DEMP=L · XSMT=H(!) · FMT=L</tspan></text>
 <text class="ts" x="392" y="500">3.5 mm out → amp / headphones (line level)</text>
 
 <line class="w" x1="560" y1="302" x2="560" y2="358" stroke="#185FA5" marker-end="url(#ar)"/>
@@ -66,7 +66,7 @@ text{font-family:-apple-system,Helvetica,Arial,sans-serif;fill:#2C2C2A}
 <text class="ts" x="313" y="540">out →</text>
 <text class="ts" x="356" y="528">to ADC LIN pad</text>
 
-<g class="gray"><rect x="40" y="720" width="600" height="100" rx="6"/></g>
+<g class="gray"><rect x="40" y="720" width="600" height="118" rx="6"/></g>
 <text class="t" x="52" y="742">Power domains &amp; star ground</text>
-<text class="ts" x="52" y="762">1. Pi 27 W USB-C → Pi; Pi J8 p2 (5 V) → ADC analog · DAC VIN;  J8 p1 (3.3 V) → ADC digital + MD straps<tspan x="52" dy="15">2. Nano ESP32 own USB-C   ·   3. Gator 9 V → TL072 only</tspan><tspan x="52" dy="15">STAR GROUND = Pi J8 pin 6: ADC GND + "–" pad · DAC GND · Nano GND · CopperSound GND — one rail, no islands</tspan></text>
+<text class="ts" x="52" y="762">1. Pi 27 W USB-C → Pi.  J8 p2 (5 V) SPLITS: branch A → DAC VIN direct;  branch B → 10 Ω → ADC +5V (ADC only!).<tspan x="52" dy="15">   J8 p1 (3.3 V) → ADC digital VDD + MD0/MD1 straps (direct wire, no regulator).</tspan><tspan x="52" dy="15">2. Nano ESP32 own USB-C   ·   3. Gator 9 V → TL072 only.  Power up in that order; power down in reverse.</tspan><tspan x="52" dy="15">STAR GROUND = Pi J8 pin 6 (ONE DC point): ADC GND + "–" pad · DAC GND · Nano GND ×2 · CopperSound GND</tspan><tspan x="52" dy="15">Paired/twisted HF returns alongside MCLK and the BCK/LRC/OUT bundle are REQUIRED — they are not "islands".</tspan><tspan x="52" dy="15">NEVER run the DAC through the 10 Ω: 34 mA × 10 Ω = 340 mV → ADC VCC 4.41 V on a sagged rail, under its 4.5 V minimum.</tspan></text>
 </svg>

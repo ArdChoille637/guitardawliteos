@@ -1,4 +1,4 @@
-<svg width="100%" viewBox="0 0 680 560" role="img" xmlns="http://www.w3.org/2000/svg">
+<svg width="100%" viewBox="0 0 680 636" role="img" xmlns="http://www.w3.org/2000/svg">
 <title>GuitarDAWLiteOS TL072 front-end schematic (single 9 V, CopperSound bench build)</title>
 <desc>Single 9V guitar front-end: CopperSound input jack, 0.1uF coupling, 1M bias to a 4.9V mid-rail, TL072 buffer, x3 gain stage with trim, 1uF output coupling to the output jack; 1k+1nF anti-alias lands at the ADC LIN pad. SPICE-verified.</desc>
 <style>
@@ -9,7 +9,7 @@ text{font-family:-apple-system,Helvetica,Arial,sans-serif;fill:#2C2C2A}
 .w,.cmp{stroke:#2C2C2A;stroke-width:1.4;fill:none}
 .dot{fill:#2C2C2A}
 </style>
-<rect x="0" y="0" width="680" height="560" fill="#FFFFFF"/>
+<rect x="0" y="0" width="680" height="636" fill="#FFFFFF"/>
 
 <rect class="cmp" x="40" y="135" width="30" height="30" rx="2"/>
 <text class="rd" x="34" y="128">J-IN</text>
@@ -69,6 +69,7 @@ text{font-family:-apple-system,Helvetica,Arial,sans-serif;fill:#2C2C2A}
 <text class="lbl" x="452" y="248">not on the pedal board</text>
 
 <line class="w" x1="80" y1="250" x2="100" y2="250"/><line class="w" x1="90" y1="250" x2="90" y2="264"/><text class="acc" x="60" y="246">+9V</text>
+<circle class="dot" cx="90" cy="250" r="2.5"/>
 <rect class="cmp" x="85" y="264" width="10" height="24"/><line class="w" x1="90" y1="288" x2="90" y2="306"/><text class="lbl" x="98" y="280">R1 10k</text>
 <circle class="dot" cx="90" cy="306" r="2.5"/><text class="acc" x="100" y="303">VBIAS 4.9V</text>
 <line class="w" x1="90" y1="306" x2="158" y2="306"/><line class="w" x1="158" y1="306" x2="158" y2="318"/><line class="w" x1="146" y1="318" x2="170" y2="318"/><line class="w" x1="146" y1="324" x2="170" y2="324"/><line class="w" x1="158" y1="324" x2="158" y2="332"/>
@@ -77,6 +78,24 @@ text{font-family:-apple-system,Helvetica,Arial,sans-serif;fill:#2C2C2A}
 <line class="w" x1="90" y1="306" x2="90" y2="318"/><rect class="cmp" x="85" y="318" width="10" height="24"/><line class="w" x1="90" y1="342" x2="90" y2="358"/><text class="lbl" x="98" y="334">R2 12k</text>
 <line class="w" x1="83" y1="358" x2="97" y2="358"/><line class="w" x1="86" y1="361" x2="94" y2="361"/><line class="w" x1="88.5" y1="364" x2="91.5" y2="364"/>
 
+<!-- C_byp inset: supply bypass at U1 pin 8 (M2 review 2026-07-22). Joined by net name, not drawn wire. -->
+<rect x="392" y="268" width="256" height="108" rx="6" fill="#FAF7FF" stroke="#534AB7" stroke-width="1"/>
+<text class="acc" x="404" y="288">C_byp — REQUIRED, at U1 pin 8</text>
+<text class="acc" x="404" y="316">+9V</text>
+<line class="w" x1="436" y1="312" x2="600" y2="312"/>
+<circle class="dot" cx="484" cy="312" r="2.5"/>
+<line class="w" x1="484" y1="312" x2="484" y2="322"/>
+<line class="w" x1="472" y1="322" x2="496" y2="322"/><line class="w" x1="472" y1="328" x2="496" y2="328"/>
+<line class="w" x1="484" y1="328" x2="484" y2="338"/>
+<line class="w" x1="477" y1="338" x2="491" y2="338"/><line class="w" x1="480" y1="341" x2="488" y2="341"/><line class="w" x1="482.5" y1="344" x2="485.5" y2="344"/>
+<text class="lbl" x="440" y="360">100uF elec</text>
+<circle class="dot" cx="580" cy="312" r="2.5"/>
+<line class="w" x1="580" y1="312" x2="580" y2="322"/>
+<line class="w" x1="568" y1="322" x2="592" y2="322"/><line class="w" x1="568" y1="328" x2="592" y2="328"/>
+<line class="w" x1="580" y1="328" x2="580" y2="338"/>
+<line class="w" x1="573" y1="338" x2="587" y2="338"/><line class="w" x1="576" y1="341" x2="584" y2="341"/><line class="w" x1="578.5" y1="344" x2="581.5" y2="344"/>
+<text class="lbl" x="540" y="360">0.1uF cer</text>
+
 <text class="rd" x="40" y="400">Notes — 9 V TL072 variant (vs the 5 V canonical sheet)</text>
 <text class="lbl" x="40" y="418">U1 = TL072 (pin-compatible w/ MCP6002; DIP-8).  V+ pin 8 = +9 V from the Gator PSU</text>
 <text class="lbl" x="40" y="434">via the CopperSound DC jack;  V− pin 4 = GND.</text>
@@ -84,6 +103,10 @@ text{font-family:-apple-system,Helvetica,Arial,sans-serif;fill:#2C2C2A}
 <text class="lbl" x="40" y="472">(TL072 phase-reversal guard).</text>
 <text class="lbl" x="40" y="494">Cout isolates the 9 V domain: the PCM1808 self-biases its input after the cap —</text>
 <text class="lbl" x="40" y="510">the ADC never sees the 9 V rail.</text>
-<text class="lbl" x="40" y="532">SPICE-verified (ngspice-46): DC 4.909 V · ×3.00 gain, flat 100 Hz–20 kHz · −3 dB @ 2.7 Hz</text>
-<text class="lbl" x="40" y="548">· hot humbucker 1 Vpp → 1.02–3.97 V at the ADC pin, no clip.</text>
+<text class="lbl" x="40" y="532">SPICE-verified (ngspice-46): DC 4.909 V · ×3.00 gain, flat 100 Hz–20 kHz · −3 dB @ 2.7 Hz.</text>
+<text class="lbl" x="40" y="548">Hot humbucker 1 Vpp → 1.02–3.97 V at the ADC pin on a TYPICAL part (swing 1.5 V from rail).</text>
+<text class="acc" x="40" y="570">Headroom is TYPICAL-part, not guaranteed: at the TL072 guaranteed-min swing (3 V from each</text>
+<text class="acc" x="40" y="586">rail) the op-amp clips positive peaks at 6.00 V — i.e. −2.9 dBFS at the ADC — before the ADC's</text>
+<text class="acc" x="40" y="602">own full scale. 9 V has no bias point that satisfies both output swing and the JFET CM floor.</text>
+<text class="acc" x="40" y="618">SET THE TRIM SO HARD STRUMS PEAK AT −6 dBFS. (2026-07-28 review; re-verified in ngspice.)</text>
 </svg>

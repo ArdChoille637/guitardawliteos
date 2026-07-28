@@ -12,12 +12,18 @@
 // this board's job is to hold GPIO5 (Nano ESP32 pin "D2") at a clean
 // 256*48kHz tone.
 //
-// SELF-TEST: no scope on hand, so frequency is verified in hardware using
-// the chip's own PCNT (pulse counter) peripheral instead of a logic
-// analyzer. Jumper D2 -> D3 (GPIO6) and the serial monitor prints the
-// measured frequency once a second. Remove/ignore the jumper once this
-// board is wired to the real PCM1808 -- the self-test is a bench check,
-// not part of normal operation.
+// SELF-TEST / HEALTH READOUT: no scope on hand, so frequency is verified in
+// hardware using the chip's own PCNT (pulse counter) peripheral instead of a
+// logic analyzer. Link D2 -> D3 (GPIO6) and the serial monitor prints the
+// measured frequency once a second.
+//
+// On the PERMANENT soldered build the D2 -> D3 link STAYS (see
+// docs/solder-build.md 5), tapped on the Nano side of the 33 ohm series
+// resistor so the counter reads the source while the resistor still damps the
+// run to the ADC. With no scope on the bench, this 1 Hz print is the only
+// continuous proof that the root of the whole audio clock domain is alive.
+// (Earlier docs said to remove the jumper after bring-up -- that was right for
+// a temporary bench jumper and is wrong for a soldered assembly.)
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
@@ -101,10 +107,15 @@ void StartFrequencyCounter() {
 }  // namespace
 
 void setup() {
+  // MCLK first, before anything that blocks. This board is the root of the whole
+  // audio clock domain: until SCKI runs, the PCM1808 is powered down and the Pi's
+  // I2S bus is dead. Starting the clock after Serial.begin()+delay(2000) left a
+  // 2 s silent window on every reset, brownout and USB re-enumeration.
+  StartMclk();
+
   Serial.begin(115200);
   delay(2000);  // give the serial monitor time to attach before we print
 
-  StartMclk();
   StartFrequencyCounter();
 
   Serial.println();
@@ -116,9 +127,22 @@ void setup() {
 void loop() {
   delay(1000);  // ~1s gate window: pulse count this window == frequency in Hz
 
+  // Soft-fail, never ESP_ERROR_CHECK here: that panics and reboots the board, which
+  // would drop MCLK and mute the whole audio chain because a *diagnostic* counter
+  // hiccuped. The counter is expendable; the clock is not.
   int count = 0;
-  ESP_ERROR_CHECK(pcnt_unit_get_count(g_pcnt_unit, &count));
-  ESP_ERROR_CHECK(pcnt_unit_clear_count(g_pcnt_unit));
+  esp_err_t err = pcnt_unit_get_count(g_pcnt_unit, &count);
+  if (err != ESP_OK) {
+    Serial.printf("PCNT read failed (%s) -- counter only; MCLK on D2 is unaffected.\n",
+                  esp_err_to_name(err));
+    return;
+  }
+  err = pcnt_unit_clear_count(g_pcnt_unit);
+  if (err != ESP_OK) {
+    Serial.printf("PCNT clear failed (%s) -- counter only; MCLK on D2 is unaffected.\n",
+                  esp_err_to_name(err));
+    return;
+  }
 
   Serial.printf("Measured MCLK: %.4f MHz (target 12.288000 MHz)\n", count / 1.0e6);
 }

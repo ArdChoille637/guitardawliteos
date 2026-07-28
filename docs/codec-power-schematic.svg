@@ -11,11 +11,11 @@ text{font-family:-apple-system,Helvetica,Arial,sans-serif;fill:#2C2C2A}
 
 <g class="green"><rect x="40" y="30" width="180" height="88" rx="6"/></g>
 <text class="t" x="52" y="52">Nano ESP32 · U4</text>
-<text class="ts" x="52" y="72">D2 (GPIO5) -&gt; MCLK<tspan x="52" dy="15">GND . GND (star)</tspan><tspan x="52" dy="15">USB-C . own power</tspan></text>
+<text class="ts" x="52" y="72">D2 (GPIO5) -33R-&gt; MCLK<tspan x="52" dy="15">GND x2 . GND (star)</tspan><tspan x="52" dy="15">USB-C . own power</tspan></text>
 
 <g class="teal"><rect x="252" y="30" width="196" height="300" rx="6"/></g>
 <text class="t" x="264" y="52">CJMCU-1808 · U2 (MASTER)</text>
-<text class="ts" x="264" y="72">SCK &lt;- MCLK (12.288 MHz)<tspan x="264" dy="15">MD1 . +3V3 (master…)</tspan><tspan x="264" dy="15">MD0 . +3V3 (…256 fs)</tspan><tspan x="264" dy="15">FMT . GND (I²S)</tspan><tspan x="264" dy="15">BCK -&gt; BCLK (drives, 3.072M)</tspan><tspan x="264" dy="15">LRC -&gt; LRCLK (drives, 48k)</tspan><tspan x="264" dy="15">OUT -&gt; CAPDAT</tspan><tspan x="264" dy="15">+5V &lt;- +5V (analog VCC)</tspan><tspan x="264" dy="15">3.3 &lt;- +3V3 (digital VDD)</tspan><tspan x="264" dy="15">GND . GND (either pin)</tspan><tspan x="264" dy="15">LIN &lt;- front-end (Rs+Ca here)</tspan><tspan x="264" dy="15">– . GND (input reference)</tspan><tspan x="264" dy="15">RIN . n/c (rev-B tape return)</tspan></text>
+<text class="ts" x="264" y="72">SCK &lt;- MCLK via 33R (12.288 MHz)<tspan x="264" dy="15">MD1 . +3V3 (master…)</tspan><tspan x="264" dy="15">MD0 . +3V3 (…256 fs)</tspan><tspan x="264" dy="15">FMT . GND (I²S)</tspan><tspan x="264" dy="15">BCK -&gt; BCLK (drives, 3.072M)</tspan><tspan x="264" dy="15">LRC -&gt; LRCLK (drives, 48k)</tspan><tspan x="264" dy="15">OUT -&gt; CAPDAT</tspan><tspan x="264" dy="15">+5V &lt;- +5V via RC (analog VCC)</tspan><tspan x="264" dy="15">3.3 &lt;- +3V3 (digital VDD)</tspan><tspan x="264" dy="15">GND x2 . GND (both pins)</tspan><tspan x="264" dy="15">LIN &lt;- front-end (Rs+Ca here)</tspan><tspan x="264" dy="15">– . GND (input reference)</tspan><tspan x="264" dy="15">RIN . n/c (rev-B tape return)</tspan></text>
 <text class="ts" x="264" y="290" fill="#993C1D">straps set BEFORE power-on;</text>
 <text class="ts" x="264" y="306" fill="#993C1D">never 5 V on a 3.3 pin (4 V max)</text>
 
@@ -26,17 +26,17 @@ text{font-family:-apple-system,Helvetica,Arial,sans-serif;fill:#2C2C2A}
 
 <g class="coral"><rect x="480" y="30" width="160" height="240" rx="6"/></g>
 <text class="t" x="492" y="52">GY-PCM5102 · U3</text>
-<text class="ts" x="492" y="72">VIN &lt;- +5V<tspan x="492" dy="15">GND . GND</tspan><tspan x="492" dy="15">SCK . GND (int. PLL)</tspan><tspan x="492" dy="15">BCK &lt;- BCLK</tspan><tspan x="492" dy="15">LCK &lt;- LRCLK</tspan><tspan x="492" dy="15">DIN &lt;- PLAYDAT</tspan><tspan x="492" dy="15">FLT pad . L</tspan><tspan x="492" dy="15">DEMP pad . L</tspan><tspan x="492" dy="15">XSMT pad . H (unmute!)</tspan><tspan x="492" dy="15">FMT pad . L</tspan><tspan x="492" dy="15">OUT L/R/G -&gt; line out</tspan></text>
+<text class="ts" x="492" y="72">VIN &lt;- +5V RAW (not via 10R)<tspan x="492" dy="15">GND . GND</tspan><tspan x="492" dy="15">SCK . GND (int. PLL)</tspan><tspan x="492" dy="15">BCK &lt;- BCLK</tspan><tspan x="492" dy="15">LCK &lt;- LRCLK</tspan><tspan x="492" dy="15">DIN &lt;- PLAYDAT</tspan><tspan x="492" dy="15">FLT pad . L</tspan><tspan x="492" dy="15">DEMP pad . L</tspan><tspan x="492" dy="15">XSMT pad . H (unmute!)</tspan><tspan x="492" dy="15">FMT pad . L</tspan><tspan x="492" dy="15">OUT L/R/G -&gt; line out</tspan></text>
 
 <text class="t" x="40" y="368">Notes</text>
 <text class="ts" x="40" y="388">Nets joined by name: MCLK · BCLK · LRCLK · CAPDAT · PLAYDAT · +5V · +3V3 · GND.</text>
 <text class="ts" x="40" y="404">Arrow = who drives the net; "." = strap / tie / no-connect.</text>
 <text class="ts" x="40" y="426">One clock domain, rooted at the Nano's crystal: the ADC divides MCLK by 256 → 48 kHz</text>
 <text class="ts" x="40" y="442">LRCLK and by 4 → 3.072 MHz BCLK — everyone else follows.</text>
-<text class="ts" x="40" y="464">Power: Pi p2/p1 feed the ADC's two rails; DAC VIN from +5V; the TL072 front-end</text>
-<text class="ts" x="40" y="480">runs on its own 9 V domain (separate sheet).</text>
+<text class="ts" x="40" y="464">Power: J8 p2 SPLITS -- DAC VIN direct from p2; ADC +5V via 10R, with 470uF + 0.1uF to star (A1). ADC ONLY.</text>
+<text class="ts" x="40" y="480">(DAC 25mA through the 10R would sag ADC VCC under its 4.5V min.) TL072 = own 9V domain.</text>
 <text class="ts" x="40" y="502">STAR GND at Pi p6: ADC GND + "–" pad, DAC GND, Nano GND, CopperSound rail —</text>
-<text class="ts" x="40" y="518">one point, no ground islands.</text>
+<text class="ts" x="40" y="518">ONE DC point. Paired/twisted HF returns beside MCLK and BCK/LRC/OUT are required, not "islands".</text>
 <text class="ts" x="40" y="540">Rev-A KiCad HAT sheet (Pi-as-master, on-HAT bare chips) predates the clock pivot;</text>
 <text class="ts" x="40" y="556">this sheet is the as-built bench truth.</text>
 </svg>
