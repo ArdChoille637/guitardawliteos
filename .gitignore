@@ -27,3 +27,6 @@ kicad/.history/
 
 # macOS
 .DS_Store
+
+# Generated preview page (rebuilt on demand, not a source document)
+docs/_wiring-preview.html
