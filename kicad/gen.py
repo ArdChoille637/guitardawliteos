@@ -118,6 +118,62 @@ NETS = {
     "ROUT":  [("Ror",2),("Cor",1),("J2",2)],
 }
 
+# ---------------------------------------------------------------------------
+# REV-B SECTION  (retro-deck-design.md §5: rev A stays unchanged; rev-B changes
+# live behind a clearly-marked section.)  Select with GDAW_REV=B.
+#
+# Rev B is the 2026-07-10 pivot, sourced from docs/adc-hookup.md,
+# docs/hardware-review.md and docs/claim-verification.md:
+#   * PCM1808 is the I2S BUS MASTER (MD0/MD1 = H); the Pi is I2S slave.
+#   * MCLK comes from an Arduino Nano ESP32 (D2 = ESP32-S3 GPIO5), NOT from the
+#     Pi: clk_i2s is claimed by BCLK, so GPCLK0-on-GPIO4 is a dead route
+#     (ruled out 2026-07-09).  A ~33R series resistor damps the clock line
+#     (M2 bench review B2/A3).
+#   * The 3.3 V rail is taken from Pi J8 pin 1 (user decision 2026-07-28,
+#     matching the bench); the onboard AP2112K LDO is therefore not populated.
+#
+# NOT encoded here (this is still a BARE-CHIP carrier board, not the module
+# bench build): the bench drops the FB1/C2/C3 VCC filter and leaves VINR open
+# because the CJMCU-1808 module AC-terminates it internally.  A real PCB wants
+# both, so they stay.  See docs/pinmap-plan-revB.md §1 item 4.
+#
+# Rev A remains the learning-vehicle board and regenerates byte-identically.
+# ---------------------------------------------------------------------------
+REV = os.environ.get("GDAW_REV", "A").upper()
+
+def apply_rev_b():
+    """Mutate COMP/NETS in place into the rev-B topology."""
+    # -- new parts: Nano MCLK header + series damping resistor --
+    COMP["J4"] = ("Nano_ESP32_MCLK", FP["hdr1x3"], {1: "D2", 2: "GND", 3: "GND"})
+    COMP["R_mclk"] = Rr("33")
+
+    def drop(net, *nodes):
+        NETS[net] = [n for n in NETS[net] if n not in nodes]
+
+    # -- 3.3 V now arrives on J8 pin 1; the LDO is not populated --
+    COMP["J3"][2][1] = "3V3"
+    for ref in ("U4", "Cli", "Clo"):
+        del COMP[ref]
+    drop("+5V", ("U4", 1), ("U4", 3), ("Cli", 1))
+    drop("GND", ("U4", 2), ("U4", 4), ("Cli", 2), ("Clo", 2))
+    drop("+3V3", ("U4", 5), ("Clo", 1))
+    NETS["+3V3"].insert(0, ("J3", 1))
+
+    # -- ADC becomes bus master: MD0/MD1 pulled high (were strapped to GND) --
+    drop("GND", ("U2", 10), ("U2", 11))
+    NETS["+3V3"] += [("U2", 10), ("U2", 11)]
+
+    # -- MCLK: Nano D2 -> 33R -> SCKI.  The Pi no longer sources it. --
+    NETS["MCLK"] = [("R_mclk", 2), ("U2", 6)]
+    NETS["MCLK_SRC"] = [("J4", 1), ("R_mclk", 1)]
+    del COMP["J3"][2][7]                      # GPIO4 no longer used
+    NETS["GND"] += [("J4", 2), ("J4", 3)]     # both Nano grounds to the star
+
+if REV == "B":
+    apply_rev_b()
+elif REV != "A":
+    sys.exit(f"GDAW_REV must be A or B, got {REV!r}")
+
 def erc():
     errs, warns = [], []
     for ref,(val,fp,pins) in COMP.items():
@@ -150,9 +206,12 @@ def sexpr_ok(text):
     return depth==0 and not instr
 
 def emit_netlist():
+    # rev A must regenerate byte-identically: no rev suffix, original date
+    date = "2026-06-29" if REV == "A" else "2026-07-28"
+    tool = "GuitarDAWLiteOS gen.py" if REV == "A" else f"GuitarDAWLiteOS gen.py rev {REV}"
     L=['(export (version "E")',
-       '  (design (source "guitardawliteos/kicad/gen.py") (date "2026-06-29")'
-       ' (tool "GuitarDAWLiteOS gen.py"))',
+       f'  (design (source "guitardawliteos/kicad/gen.py") (date "{date}")'
+       f' (tool "{tool}"))',
        '  (components']
     for ref in sorted(COMP):
         val,fp,_=COMP[ref]
@@ -209,13 +268,14 @@ def main():
     net=emit_netlist(); syms=emit_symbols()
     assert sexpr_ok(net), "netlist s-expr unbalanced"
     assert sexpr_ok(syms), "symbol s-expr unbalanced"
-    open(os.path.join(HERE,"guitardawliteos.net"),"w").write(net)
-    open(os.path.join(HERE,"guitardawliteos.kicad_sym"),"w").write(syms)
-    with open(os.path.join(HERE,"bom.csv"),"w",newline="") as f:
+    tag = "" if REV == "A" else "-revB"
+    open(os.path.join(HERE,f"guitardawliteos{tag}.net"),"w").write(net)
+    open(os.path.join(HERE,f"guitardawliteos{tag}.kicad_sym"),"w").write(syms)
+    with open(os.path.join(HERE,f"bom{tag}.csv"),"w",newline="") as f:
         w=csv.writer(f); w.writerow(("Ref","Value","Footprint"))
         for ref in sorted(COMP): w.writerow((ref,COMP[ref][0],COMP[ref][1]))
-    print(f"OK: {len(COMP)} components, {len(NETS)} nets. ERC clean. s-expr valid.")
-    print("Wrote guitardawliteos.net, guitardawliteos.kicad_sym, bom.csv")
+    print(f"OK: rev {REV} — {len(COMP)} components, {len(NETS)} nets. ERC clean. s-expr valid.")
+    print(f"Wrote guitardawliteos{tag}.net, guitardawliteos{tag}.kicad_sym, bom{tag}.csv")
 
 if __name__=="__main__":
     main()
