@@ -65,10 +65,10 @@ the pads:
 
 | Device | Powered by |
 |---|---|
-| Pi 5 | official 27 W USB-C PD |
-| Nano ESP32 | its own USB-C (never 5 V into VIN — it wants 6–21 V) |
+| Pi 5 | 5 V buck (≥5 A) off the 18 V pack → J8 p2/p4 — see [power-tree-18v.md](power-tree-18v.md) |
+| Nano ESP32 | **+9 V rail** → VIN (VIN wants 6–21 V; never 5 V, never raw 18 V) |
 | PCM1808 module | **+5V** ← Pi J8 **pin 2** and **3.3** ← Pi J8 **pin 1** — both required |
-| TL072 front-end | Gator 9 V → CopperSound DC jack (separate domain, shared ground) |
+| TL072 front-end | **+9 V rail** (7809 off the 18 V pack) → CopperSound DC jack |
 
 Star ground = Pi J8 **pin 6**: module GND, Nano GND, CopperSound GND rail,
 input **–** pad — one **DC** point, no DC ground loops.
@@ -100,15 +100,19 @@ input **–** pad — one **DC** point, no DC ground loops.
 1. Wire everything **unpowered**. Straps: FMT→GND, **MD0 and MD1→3.3 V rail**
    (TI requires mode pins set before power-on). Double-check no 5 V touches
    a 3.3 pin — **and verify it**: with the module's two power leads *not yet
-   landed*, power the Pi and meter the two rail rows (expect 5.0 V and 3.3 V),
-   then power down and connect the module. J8 pins 1 (3.3 V) and 2 (5 V) are
+   landed*, close the master switch and meter the two rail rows (expect 5.0 V
+   and 3.3 V), then open it again and connect the module. J8 pins 1 (3.3 V) and 2 (5 V) are
    physically adjacent, so a one-row slip puts 5 V on the 4 V-abs-max VDD pin.
-2. **Remove the D2→D3 self-test jumper** on the Nano ESP32.
-3. Power the Nano first (D2 carries 12.288 MHz), then the Pi, then the Gator
-   9 V. **Power down in reverse** (Gator, Pi, Nano). *(Nano-first is verified
+2. **Leave the D2→D3 link in place** — the frozen M2 wiring keeps it as a
+   permanent MCLK health readout, tapped *before* the 33 Ω (see the banner at
+   the top of this file). *(This step previously said to remove it; that
+   predates the freeze.)*
+3. **One master switch now brings up all rails together** (single 18 V source —
+   [power-tree-18v.md](power-tree-18v.md)); the old Nano→Pi→Gator sequencing no
+   longer applies. *(Simultaneous bring-up is safe for the same reason Nano-first was — review B1: the PCM1808's SCK/MD/FMT inputs are rated −0.3…+6.5 V
    safe — review B1: the PCM1808's SCK/MD/FMT inputs are rated −0.3…+6.5 V
-   independent of VDD, so 3.3 V into an unpowered ADC injects no fault current.)*
-   Before touching any wire later, **kill all three supplies first.**
+   independent of VDD, so no ordering hazard exists between the rails.)*
+   Before touching any wire later, **open the master switch first.**
 4. Boot log: `I2S full duplex (TXRX, slave - ADC masters the bus): RUNNING`.
    **`cap`/`play` only start counting once the ADC is wired, powered, and
    clocked** — a bare-board boot correctly shows 0s now (unlike the old
