@@ -32,8 +32,10 @@ what rail the op-amp runs on. TL072 is pin-compatible with the MCP6002
 ## Add a supply bypass cap (M2 review, 2026-07-22)
 
 **`C_byp` = 100 µF electrolytic ∥ 0.1 µF ceramic at U1 pin 8 → GND.** The as-built
-docs had *no* supply bypass, and the SPICE deck modeled the Gator as an ideal 9 V
-source, so rail ripple was never analyzed. It matters more than it looks, because
+docs had *no* supply bypass, and the SPICE deck modeled the 9 V supply as ideal,
+so rail ripple was never analyzed. **This matters more since 2026-07-28**, because
+the 9 V now comes from a 7809 fed by the same pack that runs the Pi's buck, rather
+than from an isolated wall PSU. It matters more than it looks anyway, because
 **VBIAS ripple is not common-mode here** — at 120 Hz Cin (0.1 µF ≈ 13 kΩ) shunts the
 gain stage's + input toward the low-impedance guitar, so ripple on VBIAS gets
 *inverting-amplified* by Rf/Rg, not cancelled.
@@ -76,15 +78,16 @@ holds for an open input; a plugged-in guitar sees the Rf/Rg path.)*
 - The 9 V rail powers **only U1**. The PCM1808's VCC stays on the Pi's 5 V
   per [adc-hookup.md](adc-hookup.md) — do not put 9 V anywhere near the ADC.
 
-## Bench setup: CopperSound DIY breadboard (medium) + Gator 9 V PSU
+## Bench setup: CopperSound DIY breadboard (medium) on the +9 V rail
 
 The whole front-end lives on the CopperSound board — it exists for exactly
 this kind of circuit:
 
-- **Gator 9 V →** the CopperSound board's **DC jack**. Both sides are
-  standard Boss-style center-negative, so polarity is handled by using
-  them as intended. Its power rails become the front-end's +9 V and GND
-  (check the board's own rail labels).
+- **+9 V rail** (7809 off the central 18 V pack, [power-tree-18v.md](power-tree-18v.md))
+  **→** the CopperSound board's **DC jack** via a Boss-style center-negative
+  plug, so polarity is handled by using the jack as intended. Its power rails
+  become the front-end's +9 V and GND (check the board's own rail labels).
+  *(Was a Gator 9 V wall PSU until 2026-07-28.)*
 - **Guitar →** the board's **input jack** → Cin 0.1 µF → Rbias 1 M →
   TL072 buffer → ×3 gain stage → **Cout 1 µF → the board's output jack**.
 - **Output jack → PCM1808 side** with a regular instrument cable (or a
@@ -95,12 +98,15 @@ this kind of circuit:
   ground (Pi pin 6 rail). The cable's sleeve nominally carries ground
   too, but the audio reference shouldn't hang off a patch cable.
 
-Two supply domains, one ground: Gator 9 V feeds only the TL072 board; the
-Pi's 5 V/3.3 V feed the PCM1808 per [adc-hookup.md](adc-hookup.md).
+One source, one ground: the +9 V rail feeds the TL072 board and the Nano's VIN;
+the Pi's 5 V/3.3 V feed the PCM1808 per [adc-hookup.md](adc-hookup.md). Keep the
+9 V and 5 V branches as separate spokes from the star — see
+[power-tree-18v.md](power-tree-18v.md).
 
 This rig doubles as the pedal-development platform for the Pedal Workshop
-merge — same board, same PSU, pedals prototyped between the guitar and
-this front-end.
+merge — same board, pedals prototyped between the guitar and this front-end.
+A pedal under test wants its own 9 V feed or a dedicated rail spoke, not a
+daisy-chain through the front-end's.
 
 ## Also in the drawer: CD4053BE
 

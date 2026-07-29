@@ -97,7 +97,7 @@ text{font-family:-apple-system,Helvetica,Arial,sans-serif;fill:#2C2C2A}
 <text class="lbl" x="540" y="360">0.1uF cer</text>
 
 <text class="rd" x="40" y="400">Notes — 9 V TL072 variant (vs the 5 V canonical sheet)</text>
-<text class="lbl" x="40" y="418">U1 = TL072 (pin-compatible w/ MCP6002; DIP-8).  V+ pin 8 = +9 V from the Gator PSU</text>
+<text class="lbl" x="40" y="418">U1 = TL072 (pin-compatible w/ MCP6002; DIP-8).  V+ pin 8 = +9 V rail (7809 off the 18 V pack)</text>
 <text class="lbl" x="40" y="434">via the CopperSound DC jack;  V− pin 4 = GND.</text>
 <text class="lbl" x="40" y="456">VBIAS = 4.9 V (R1 10k / R2 12k from 9 V) — keeps the JFET inputs ≥ 4 V from ground</text>
 <text class="lbl" x="40" y="472">(TL072 phase-reversal guard).</text>
