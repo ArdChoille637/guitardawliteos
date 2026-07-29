@@ -101,12 +101,21 @@ switching residue. Two consequences:
 |---|---|
 | Pi 5, bare-metal audio workload | ≈ 6–8 W |
 | Nano ESP32 + analog front-end | ≈ 1 W |
-| **Subtotal** | **≈ 9 W** → ~1.9 h on a 2 Ah pack (36 Wh), ~3.8 h on 4 Ah |
-| \+ SK9822 bargraph, 60 LED/m, if fitted | up to **18 W** at full white |
+| **Total, current build** | **≈ 9 W** → ~1.9 h on a 2 Ah pack (36 Wh), ~3.8 h on 4 Ah |
 
-The LED strip, if fitted, dominates everything else and must not be fed from
-the Pi's header — see its own note in [retro-deck-design.md](retro-deck-design.md)
-(SPI0 on GPIO10/11). Budget it its own buck branch off the 18 V rail.
+### Deferred — not in the current build (2026-07-28)
+
+- **SK9822 / APA102 LED bargraph** — parked. When it returns it needs **its own
+  buck branch off the 18 V rail**, never the Pi's header: 60 LEDs at full white
+  is ≈ 3.6 A / 18 W, which would dominate this entire budget and roughly halve
+  runtime. It also needs a 3.3 → 5 V buffer (74AHCT125) on data and clock, since
+  the part's V<sub>IH</sub> ≈ 0.7 × V<sub>DD</sub> = 3.5 V and the Pi drives
+  3.3 V. Pin reservation (SPI0, GPIO10/11) stays as-is in
+  [retro-deck-design.md](retro-deck-design.md) — nothing here reassigns it.
+- **SN74HC595 shift register** — parked; no role assigned. Note for whenever it
+  is picked up: it is **HC**, not AHCT, so its own V<sub>IH</sub> at 5 V is
+  ≈ 3.5 V. It cannot serve as a 3.3 V → 5 V level shifter, for the LED strip or
+  anything else.
 
 Stop discharging at **15.0 V**. The cutoff module is not optional on a lithium
 tool pack.
@@ -118,7 +127,8 @@ master the bus — but there is now **one switch** instead of three supplies to
 sequence:
 
 1. Wire everything **unpowered**. Straps first: FMT→GND, MD0/MD1→3.3 V.
-2. Remove the D2→D3 self-test jumper on the Nano.
+2. **Leave the D2→D3 link in place** — the frozen M2 wiring keeps it as a
+   permanent MCLK health readout, tapped *before* the 33 Ω.
 3. **Meter the rails before landing the codec leads.** With the module's two
    power leads *not yet connected*, close the master switch and confirm +9 V,
    +5 V, and the Pi's J8 p1/p2 at 3.3 V/5.0 V. J8 pins 1 and 2 are physically
