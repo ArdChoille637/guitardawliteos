@@ -90,11 +90,14 @@ esptool --chip esp32s3 --port "$PORT" --before default-reset --after hard-reset 
 | D2 (GPIO5) | MCLK 12.288 MHz | PCM1808 **SCKI (pin 6)** only |
 | GND | common ground | tie to the Pi 5 / breadboard ground |
 
-Power the Nano ESP32 from the rig's **+9 V rail into VIN** (7809 off the
-central 18 V pack — see `docs/power-tree-18v.md`). Do **not** feed the 5 V
-rail into VIN: the VIN regulator wants 6–21 V, so 5 V is out of spec. Do not
-feed raw 18 V either — a fresh pack sits near 20.5 V, too close to the 21 V
-ceiling. *(Was its own USB-C until 2026-07-28.)*
+**On the bench: power the Nano ESP32 from its own USB-C.** Do **not** feed the
+5 V breadboard rail into VIN — the VIN regulator wants 6–21 V, so 5 V is out of
+spec. On the bench it is electrically independent of the Pi 5 audio board except
+for the MCLK line and a shared ground.
+
+*(Target build: VIN from the rig's +9 V rail, 7809 off the central 18 V pack —
+`docs/power-tree-18v.md`. Not raw 18 V: a fresh pack sits near 20.5 V, too close
+to the 21 V ceiling.)*
 
 ## Why not the Pi 5 / a Pico / a Si5351
 

@@ -1,12 +1,23 @@
 # Power tree — single 18 V source
 
-**Decision (2026-07-28):** the rig runs from **one** central 18 V tool battery.
-The Gator 9 V pedal PSU and the Pi's 27 W USB-C PD brick are **removed**, and
-the Nano ESP32 no longer runs off its own USB-C. Every rail is derived on-board.
+> ## Status: TARGET architecture — **not** what the bench runs today
+>
+> The bench currently runs **config A**: official 27 W USB-C PD → Pi, Gator 9 V →
+> TL072, Nano ESP32 on its own USB-C. That is documented in
+> [adc-hookup.md](adc-hookup.md) and is the configuration to follow for bench
+> work, **including its power-up ordering (Nano → Pi → Gator, down in reverse)
+> and its load-bearing star-ground jumper.** No 18 V source exists yet.
+>
+> Everything below describes **config B**, the target once an 18 V pack is on
+> hand. Adopt it as a unit — the ordering relief and the ground-hazard relief
+> described here are consequences of having a *single* source, and do not apply
+> to the three-supply bench.
 
-This supersedes the three-independent-supplies arrangement described in
-[adc-hookup.md](adc-hookup.md), [tl072-frontend.md](tl072-frontend.md) and
-[wiring-diagram.svg](wiring-diagram.svg) before this date.
+**Design decision (2026-07-28):** when built, the rig runs from **one** central
+18 V tool battery — no Gator 9 V, no USB-C bricks. Every rail derives on-board.
+
+Codec rails are identical in both configurations; only the *upstream* source
+differs, so bench results carry over unchanged.
 
 ## The tree
 
