@@ -69,14 +69,27 @@ the pads:
 
 | Device | Powered by |
 |---|---|
-| Pi 5 | official 27 W USB-C PD |
-| Nano ESP32 | its own USB-C (never 5 V into VIN — it wants 6–21 V) |
+| Pi 5 | official 45 W USB-C PD |
+| Nano ESP32 | **preferred:** Gator 9 V → **VIN** (in spec: VIN wants 6–21 V) · *fallback:* its own USB-C. **Never 5 V into VIN.** |
 | PCM1808 module | **+5V** ← Pi J8 **pin 2** and **3.3** ← Pi J8 **pin 1** — both required |
 | TL072 front-end | Gator 9 V → CopperSound DC jack (separate domain, shared ground) |
 
 **B — TARGET (single 18 V pack):** see [power-tree-18v.md](power-tree-18v.md).
 Only the *upstream* source differs; the codec rails below are identical in both.
 
+> **Taking the Nano off USB.** The Gator already supplies 9 V on the bench, and
+> the Nano's VIN window is 6–21 V, so tapping it for VIN frees the USB slot *and*
+> rehearses the target topology (where VIN comes off the 7809 rail). Two
+> consequences to plan for:
+> 1. **You lose the 1 Hz MCLK health print**, which goes out over the Nano's USB
+>    serial. That print is currently the only continuous proof the clock domain is
+>    alive — see `esp32-mclk/esp32-mclk.ino`. Replace it with the Pi-side check in
+>    [boot-selfcheck.md](boot-selfcheck.md) before unplugging.
+> 2. **The Nano now shares the analog 9 V supply with the TL072.** Keep them as
+>    separate spokes, rely on the `C_byp` 100 µF ∥ 0.1 µF at U1 pin 8, and disable
+>    the ESP32's WiFi/BT radio — this board is a dedicated clock generator and the
+>    radio buys nothing but current spikes on an audio rail.
+>
 > ⚠ **The three-supply bench inherits two rules that config B removes**: the
 > power-up ordering in [Order of operations](#order-of-operations) below, and the
 > load-bearing star-ground jumper — with independent supplies, a dropped ground

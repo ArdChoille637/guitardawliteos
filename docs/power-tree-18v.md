@@ -2,7 +2,7 @@
 
 > ## Status: TARGET architecture — **not** what the bench runs today
 >
-> The bench currently runs **config A**: official 27 W USB-C PD → Pi, Gator 9 V →
+> The bench currently runs **config A**: official 45 W USB-C PD → Pi, Gator 9 V →
 > TL072, Nano ESP32 on its own USB-C. That is documented in
 > [adc-hookup.md](adc-hookup.md) and is the configuration to follow for bench
 > work, **including its power-up ordering (Nano → Pi → Gator, down in reverse)
@@ -34,7 +34,7 @@ Ryobi 18 V pack  (15.0–20.5 V over discharge)
   │        └──► Nano ESP32 VIN                    [was: its own USB-C]
   │
   └──► 5 V buck converter, ≥5 A, input rated ≥24 V
-           └──► Pi 5                              [was: 27 W USB-C PD]
+           └──► Pi 5                              [was: 45 W USB-C PD]
                   └─ Pi J8 p2 (5 V)  → PCM1808 VCC, PCM5102A VIN
                      Pi J8 p1 (3.3 V) → PCM1808 VDD, MD0/MD1 straps, XSMT
                      Pi J8 p6         → star ground
