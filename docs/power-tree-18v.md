@@ -1,12 +1,23 @@
 # Power tree — single 18 V source
 
-**Decision (2026-07-28):** the rig runs from **one** central 18 V tool battery.
-The Gator 9 V pedal PSU and the Pi's 27 W USB-C PD brick are **removed**, and
-the Nano ESP32 no longer runs off its own USB-C. Every rail is derived on-board.
+> ## Status: TARGET architecture — **not** what the bench runs today
+>
+> The bench currently runs **config A**: official 45 W USB-C PD → Pi, Gator 9 V →
+> TL072, Nano ESP32 on its own USB-C. That is documented in
+> [adc-hookup.md](adc-hookup.md) and is the configuration to follow for bench
+> work, **including its power-up ordering (Nano → Pi → Gator, down in reverse)
+> and its load-bearing star-ground jumper.** No 18 V source exists yet.
+>
+> Everything below describes **config B**, the target once an 18 V pack is on
+> hand. Adopt it as a unit — the ordering relief and the ground-hazard relief
+> described here are consequences of having a *single* source, and do not apply
+> to the three-supply bench.
 
-This supersedes the three-independent-supplies arrangement described in
-[adc-hookup.md](adc-hookup.md), [tl072-frontend.md](tl072-frontend.md) and
-[wiring-diagram.svg](wiring-diagram.svg) before this date.
+**Design decision (2026-07-28):** when built, the rig runs from **one** central
+18 V tool battery — no Gator 9 V, no USB-C bricks. Every rail derives on-board.
+
+Codec rails are identical in both configurations; only the *upstream* source
+differs, so bench results carry over unchanged.
 
 ## The tree
 
@@ -23,7 +34,7 @@ Ryobi 18 V pack  (15.0–20.5 V over discharge)
   │        └──► Nano ESP32 VIN                    [was: its own USB-C]
   │
   └──► 5 V buck converter, ≥5 A, input rated ≥24 V
-           └──► Pi 5                              [was: 27 W USB-C PD]
+           └──► Pi 5                              [was: 45 W USB-C PD]
                   └─ Pi J8 p2 (5 V)  → PCM1808 VCC, PCM5102A VIN
                      Pi J8 p1 (3.3 V) → PCM1808 VDD, MD0/MD1 straps, XSMT
                      Pi J8 p6         → star ground

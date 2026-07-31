@@ -11,7 +11,7 @@ text{font-family:-apple-system,Helvetica,Arial,sans-serif;fill:#2C2C2A}
 
 <g class="green"><rect x="40" y="30" width="180" height="88" rx="6"/></g>
 <text class="t" x="52" y="52">Nano ESP32 · U4</text>
-<text class="ts" x="52" y="72">D2 (GPIO5) -33R-&gt; MCLK<tspan x="52" dy="15">GND x2 . GND (star)</tspan><tspan x="52" dy="15">VIN . +9 V rail</tspan></text>
+<text class="ts" x="52" y="72">D2 (GPIO5) -33R-&gt; MCLK<tspan x="52" dy="15">GND x2 . GND (star)</tspan><tspan x="52" dy="15">USB-C (bench) . 9V rail (target)</tspan></text>
 
 <g class="teal"><rect x="252" y="30" width="196" height="300" rx="6"/></g>
 <text class="t" x="264" y="52">CJMCU-1808 · U2 (MASTER)</text>

@@ -78,16 +78,18 @@ holds for an open input; a plugged-in guitar sees the Rf/Rg path.)*
 - The 9 V rail powers **only U1**. The PCM1808's VCC stays on the Pi's 5 V
   per [adc-hookup.md](adc-hookup.md) — do not put 9 V anywhere near the ADC.
 
-## Bench setup: CopperSound DIY breadboard (medium) on the +9 V rail
+## Bench setup: CopperSound DIY breadboard (medium) + Gator 9 V PSU
 
 The whole front-end lives on the CopperSound board — it exists for exactly
 this kind of circuit:
 
-- **+9 V rail** (7809 off the central 18 V pack, [power-tree-18v.md](power-tree-18v.md))
-  **→** the CopperSound board's **DC jack** via a Boss-style center-negative
-  plug, so polarity is handled by using the jack as intended. Its power rails
-  become the front-end's +9 V and GND (check the board's own rail labels).
-  *(Was a Gator 9 V wall PSU until 2026-07-28.)*
+- **Gator 9 V →** the CopperSound board's **DC jack**. Both sides are
+  standard Boss-style center-negative, so polarity is handled by using
+  them as intended. Its power rails become the front-end's +9 V and GND
+  (check the board's own rail labels).
+  *(Target build swaps the Gator for a 7809-derived +9 V rail off the
+  central 18 V pack — [power-tree-18v.md](power-tree-18v.md). Everything
+  downstream of the DC jack is identical either way.)*
 - **Guitar →** the board's **input jack** → Cin 0.1 µF → Rbias 1 M →
   TL072 buffer → ×3 gain stage → **Cout 1 µF → the board's output jack**.
 - **Output jack → PCM1808 side** with a regular instrument cable (or a
@@ -98,10 +100,11 @@ this kind of circuit:
   ground (Pi pin 6 rail). The cable's sleeve nominally carries ground
   too, but the audio reference shouldn't hang off a patch cable.
 
-One source, one ground: the +9 V rail feeds the TL072 board and the Nano's VIN;
-the Pi's 5 V/3.3 V feed the PCM1808 per [adc-hookup.md](adc-hookup.md). Keep the
-9 V and 5 V branches as separate spokes from the star — see
-[power-tree-18v.md](power-tree-18v.md).
+On the bench: two supply domains, one ground — the Gator 9 V feeds only the
+TL072 board; the Pi's 5 V/3.3 V feed the PCM1808 per
+[adc-hookup.md](adc-hookup.md). In the target build both rails come off the same
+18 V pack and must stay **separate spokes from the star**, not daisy-chained
+([power-tree-18v.md](power-tree-18v.md)).
 
 This rig doubles as the pedal-development platform for the Pedal Workshop
 merge — same board, pedals prototyped between the guitar and this front-end.

@@ -7,7 +7,7 @@
 |--:|------|------|---:|------|
 | 1 | **SC0889** | Raspberry Pi Debug Probe | 12 | **Get this** — the UART console via the Pi 5 3-pin JST-SH debug connector; cables included. Replaces a generic USB-serial + guesswork. |
 | 1 | **SC1148** | Pi 5 Active Cooler | 5 | Needed for the closed retro box later; nice on the bench now. |
-| 1 | ~~SC1158~~ | ~~27 W USB-C PD supply~~ — **dropped 2026-07-28** | — | Superseded by the single 18 V source: 5 V buck (≥5 A) off the pack feeds J8 p2/p4. See `docs/power-tree-18v.md`. |
+| 1 | — | official **45 W** USB-C PD supply | — | **In use on the bench** (supersedes the 27 W SC1158 originally listed). Target build replaces it with a 5 V buck off the 18 V pack (`docs/power-tree-18v.md`); keep it for bench work either way. |
 | (1) | SC1432 | Raspberry Pi 5, 8 GB | **175** | ⚠️ DRAM-shortage pricing (was $80 MSRP). **If you already have a Pi 5, skip**; if buying spares for the project, decide whether to wait out the memory price surge. |
 
 ## 1b. MCLK generator (Spike B, added 2026-07-09)
