@@ -35,4 +35,10 @@ clang++ -std=c++17 -O1 -g -fsanitize=thread -pthread \
 "$OUT/ringbuffer_test_tsan"
 
 echo
+echo ">> tuning test"
+clang++ -std=c++17 -O2 -Wall -Wextra \
+        -o "$OUT/tuning_test" "$HERE/tuning_test.cpp" -lm
+"$OUT/tuning_test"
+
+echo
 echo "ALL TEST BINARIES PASSED"

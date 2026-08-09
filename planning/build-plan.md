@@ -97,7 +97,7 @@ The **PCM1808 is I²S master** (divides SCKI to BCK/LRCK); the Pi runs slave (`G
 ## Milestone 6 — Guitarist tools
 
 - [ ] **6.1 Tuner (YIN)** (M) `[CORR-6]` — **clean-room reimplement YIN from the 2002 JASA paper** (do *not* ship `ashokfernandez/Yin-Pitch-Tracking` as MIT — it's unlicensed). **No patent barrier** (FR2825505B1 expired). 2048-sample window @ 48k on Core 1 (~0.5–2 ms). Difference fn → CMND → threshold (0.1–0.15) → parabolic interp.
-- [ ] **6.2 Tuning-aware display** (S) — open-string freq tables (DADGAD, D-standard, etc.); nearest-note + cents. (Tuning Hz arrays in the research doc are correct.)
+- [~] **6.2 Tuning-aware display** (S) — **implemented + host-verified** in [src/tuning.h](../src/tuning.h): open-string freq tables (Standard E, Drop D, DADGAD, Open G, Open D, D Standard — equal temperament, A4=440 Hz) plus `NoteFromFrequency()` (chromatic nearest-note + signed cents off a measured Hz) and `NearestString()` (nearest open string within a specific tuning, compared in cents so tunings that repeat a note across octaves — e.g. DADGAD's three D strings — aren't confused by note name alone). Freestanding-safe (`<stdint.h>`/`<math.h>` only, no libc++), same as ringbuffer.h/audiostats.h, so it also compiles host-side: [tests/tuning_test.cpp](../tests/tuning_test.cpp), wired into [tests/run-tests.sh](../tests/run-tests.sh). Not yet wired to a caller (needs 6.1's YIN output) or the display (M5).
 - [ ] **6.3 Metronome** (S) — sample-accurate click mixed into the DAC on Core 0.
 - [ ] **6.4 BPM tap + scale/chord/interval reference** (S) — static data, no audio dependency.
 - [ ] **6.5 Session notebook** (S) — text buffer → `notebook.txt`.
